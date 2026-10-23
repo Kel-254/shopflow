@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lena MiniMart | Login</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="login-card">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    LM
+                </div>
+
+                <h1>LENA MINIMART</h1>
+
+                <p>Shop Management System</p>
+
+            </div>
+
+            <div class="form-heading">
+
+                <h2>Welcome Back</h2>
+
+                <p>Login to manage your shop.</p>
+
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+
+                    <label>Username</label>
+
+                    <input
+                        type="text"
+                        name="username"
+                        placeholder="Enter your username"
+                        required
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Password</label>
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+
+                </div>
+
+                <button type="submit">
+                    Login
+                </button>
+
+            </form>
+
+            <div class="login-link">
+
+                Don't have a shop account?
+
+                <a href="{{ url_for('register_shop') }}">
+                    Register Shop
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

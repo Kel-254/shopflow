@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Add Supplier
+{% endblock %}
+
+{% block content %}
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Add Supplier</h1>
+        <p>Register a new supplier for {{ current_user.shop.name }}.</p>
+    </div>
+
+    <a href="{{ url_for('suppliers') }}" class="secondary-button">
+        ← Back to Suppliers
+    </a>
+
+</header>
+
+
+<section class="dashboard-card supplier-form-card">
+
+    <div class="card-header">
+
+        <div>
+            <h3>Supplier Information</h3>
+            <p>Enter the supplier's details below.</p>
+        </div>
+
+    </div>
+
+
+    <form method="POST" class="supplier-form">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-grid">
+
+            <!-- SUPPLIER NAME -->
+
+            <div class="form-group">
+
+                <label for="name">
+                    Supplier Name
+                    <span>*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="e.g. ABC Distributors"
+                    required
+                >
+
+            </div>
+
+
+            <!-- PHONE -->
+
+            <div class="form-group">
+
+                <label for="phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="e.g. 0712 345 678"
+                >
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="e.g. supplier@example.com"
+                >
+
+            </div>
+
+
+            <!-- KRA PIN -->
+
+            <div class="form-group">
+
+                <label for="kra_pin">
+                    KRA PIN
+                </label>
+
+                <input
+                    type="text"
+                    id="kra_pin"
+                    name="kra_pin"
+                    placeholder="e.g. P051234567A"
+                >
+
+            </div>
+
+
+            <!-- ADDRESS -->
+
+            <div class="form-group form-group-full">
+
+                <label for="address">
+                    Address
+                </label>
+
+                <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    placeholder="e.g. Nairobi Industrial Area"
+                >
+
+            </div>
+
+
+            <!-- NOTES -->
+
+            <div class="form-group form-group-full">
+
+                <label for="notes">
+                    Notes
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="5"
+                    placeholder="Add any additional information about this supplier..."
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('suppliers') }}"
+                class="secondary-button"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Save Supplier
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

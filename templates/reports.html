@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Reports | Lena MiniMart{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <span>/</span>
+    <span class="breadcrumb-current">Reports</span>
+</div>
+
+
+<div class="page-header">
+    <div>
+        <h1>Business Reports</h1>
+        <p>Track sales performance and understand your business.</p>
+    </div>
+</div>
+
+<!-- DATE FILTER -->
+<div class="report-filter-card">
+    <form method="GET" action="{{ url_for('reports') }}"
+          class="report-filter-form">
+
+        <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input
+                type="date"
+                id="start_date"
+                name="start_date"
+                value="{{ start_date }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                value="{{ end_date }}"
+                required
+            >
+        </div>
+
+        <button type="submit" class="primary-button">
+            Generate Report
+        </button>
+    </form>
+</div>
+
+<!-- SALES SUMMARY -->
+<div class="report-summary-grid">
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon">💰</div>
+        <p>Total Sales</p>
+        <h2>KSh {{ "%.2f"|format(total_sales|float) }}</h2>
+        <small>Revenue for selected dates</small>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon">🧾</div>
+        <p>Transactions</p>
+        <h2>{{ total_transactions }}</h2>
+        <small>Completed sales recorded</small>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon">📦</div>
+        <p>Items Sold</p>
+        <h2>{{ total_items_sold }}</h2>
+        <small>Total units sold</small>
+    </div>
+
+    <div class="report-stat-card">
+        <div class="report-stat-icon">📈</div>
+        <p>Average Sale</p>
+        <h2>KSh {{ "%.2f"|format(average_sale|float) }}</h2>
+        <small>Average value per transaction</small>
+    </div>
+
+</div>
+
+<!-- DAILY SALES TREND -->
+<div class="report-chart-card">
+
+    <div class="report-chart-header">
+        <div>
+            <h2>📈 Daily Sales Trend</h2>
+            <p>Daily revenue for {{ start_date }} to {{ end_date }}.</p>
+        </div>
+    </div>
+
+    <div class="report-chart-container">
+        <canvas id="dailySalesChart"></canvas>
+    </div>
+
+</div>
+
+<!-- SALES HISTORY -->
+<div class="report-table-card">
+
+    <div class="report-table-header">
+        <div>
+            <h2>Sales Summary</h2>
+            <p>
+                {{ start_date }} to {{ end_date }}
+            </p>
+        </div>
+
+        <span class="report-count">
+            {{ recent_sales|length }} transactions
+        </span>
+    </div>
+
+    {% if recent_sales %}
+
+    <div class="table-wrapper">
+        <table class="report-table">
+
+            <thead>
+                <tr>
+                    <th>Sale ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Items</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sale in recent_sales %}
+                <tr>
+                    <td>#{{ sale.id }}</td>
+
+                    <td>
+                        {{ format_eat(sale.created_at).split(',')[0] }}
+                    </td>
+
+                    <td>
+                        {{ format_eat(sale.created_at).split(',')[1].strip() }}
+                    </td>
+
+                    <td>
+                        {{ sale.items|sum(attribute="quantity") }}
+                    </td>
+
+                    <td class="report-amount">
+                        KSh {{ "%.2f"|format(sale.total_amount|float) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="report-empty-state">
+        <div>📊</div>
+        <h3>No Sales Found</h3>
+        <p>
+            No sales were recorded during the selected period.
+            Try choosing another date range.
+        </p>
+    </div>
+
+    {% endif %}
+
+</div>
+
+</div>
+
+<!-- TOP-SELLING PRODUCTS -->
+<div class="report-table-card">
+
+    <div class="report-table-header">
+        <div>
+            <h2>🏆 Top-Selling Products</h2>
+            <p>Best-performing products for the selected period.</p>
+        </div>
+
+        <span class="report-count">
+            {{ top_products|length }} products
+        </span>
+    </div>
+
+    {% if top_products %}
+
+    <div class="table-wrapper">
+        <table class="report-table">
+
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Product</th>
+                    <th>Quantity Sold</th>
+                    <th>Sales Revenue</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in top_products %}
+                <tr>
+                    <td>
+                        <span class="product-rank">
+                            {{ loop.index }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong>{{ product.product_name }}</strong>
+                    </td>
+
+                    <td>{{ product.quantity_sold }}</td>
+
+                    <td class="report-amount">
+                        KSh {{ "%.2f"|format(product.revenue|float) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="report-empty-state">
+        <div>📦</div>
+        <h3>No Product Sales Yet</h3>
+        <p>Products will appear here once sales are recorded.</p>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script id="daily-sales-data" type="application/json">
+{
+    "labels": {{ daily_sales | map(attribute="sale_date") | map("string") | list | tojson }},
+    "values": {{ daily_sales | map(attribute="daily_revenue") | list | tojson }}
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const canvas = document.getElementById("dailySalesChart");
+    const dataElement = document.getElementById("daily-sales-data");
+
+    if (!canvas || !dataElement) {
+        return;
+    }
+
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js did not load.");
+        return;
+    }
+
+    const chartData = JSON.parse(dataElement.textContent);
+
+    new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: "Daily Sales (KSh)",
+                data: chartData.values,
+                borderColor: "#087f5b",
+                backgroundColor: "rgba(8, 127, 91, 0.14)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                pointBackgroundColor: "#ffffff",
+                pointBorderColor: "#087f5b",
+                pointBorderWidth: 3,
+                pointHoverBackgroundColor: "#087f5b",
+                pointHoverBorderColor: "ffffff",
+                pointHoverBorderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: "index"
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return "KSh " + Number(
+                                context.parsed.y
+                            ).toLocaleString("en-KE", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

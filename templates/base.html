@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        Lena MiniMart
+        {% endblock %}
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body class="dashboard-page">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <!-- MOBILE CLOSE BUTTON -->
+
+        <button class="mobile-close-button"
+                onclick="toggleSidebar()">
+
+            ✕
+
+        </button>
+
+
+        <!-- BRAND -->
+
+        <div class="sidebar-brand">
+
+            <div class="brand-icon">
+                LM
+            </div>
+
+            <div>
+
+                <h2>LENA MINIMART</h2>
+
+                <span>
+                    Management System
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('dashboard') }}"
+               class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+
+                <span>🏠</span>
+
+                Dashboard
+
+            </a>
+
+            <!-- INVENTORY -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    INVENTORY
+                </div>
+
+                <a href="{{ url_for('products') }}"
+                   class="nav-item {% if request.endpoint in ['products', 'add_product', 'edit_product'] %}active{% endif %}">
+                   <span>📦</span>
+                   Products & Stock
+                </a>
+
+                <a href="{{ url_for('stock_history') }}"
+                   class="nav-item {% if request.endpoint == 'stock_history' %}active{% endif %}">
+                   <span>📋</span>
+                    Stock History
+                </a>
+            </div>
+            <!-- PURCHASING-->
+            <div class="nav-section">
+                 <div class="nav-section-title">
+                    PURCHASING
+                 </div>
+                 <a href="{{ url_for('suppliers') }}"
+                    class="nav-item {% if request.endpoint in ['suppliers', 'add_supplier', 'edit_supplier', 'supplier_details'] %}active{% endif %}">
+                    <span>🚚</span>
+                       Suppliers
+                 </a>
+                 <a href="{{ url_for('purchases') }}"
+                    class="nav-item {% if request.endpoint in ['purchases', 'purchase_details', 'add_purchase_order', 'receive_purchase'] %}active{% endif %}">
+                    <span>📝</span>
+                    Purchase Orders
+                </a>
+                <a href="{{ url_for('deliveries') }}"
+                   class="nav-item {% if request.endpoint in ['deliveries', 'delivery_details'] %}active{% endif %}"
+                >
+                   <span >📦</span>
+                       Deliveries
+                </a>
+
+                <a href="{{ url_for('supplier_debts') }}"
+                   class="nav-item {% if request.endpoint == 'supplier_debts' %}active{% endif %}">
+                   <span>💳</span>
+                   <span>Supplier Debts</span>
+                </a>
+                    
+            </div>
+
+            <!-- SALES-->
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                     SALES
+                </div>
+
+
+                <a href="{{ url_for('sales') }}"
+                   class="nav-item {% if request.endpoint in ['sales', 'complete_sale'] %}active{% endif %}">
+
+                  <span>🛒</span>
+
+                    New Sale
+
+                </a>
+
+
+                <a href="{{ url_for('sales_history') }}"
+                   class="nav-item {% if request.endpoint in ['sales_history', 'sale_details'] %}active{% endif %}">
+
+                    <span>📋</span>
+
+                     Sales History
+
+                </a>
+
+            </div>
+
+
+            <!-- =========================================
+                        REPORTS
+            ========================================= -->
+
+           <div class="nav-section">
+
+               <div class="nav-section-title">
+                    REPORTS
+               </div>
+
+
+                <a href="{{ url_for('reports') }}"
+                   class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}">
+
+                   <span>📊</span>
+
+                   Reports
+                </a>
+
+              </div>
+
+            </div>
+
+        </nav>
+
+        <!-- BOTTOM NAVIGATION -->
+
+        <div class="sidebar-bottom">
+
+            <a href="{{ url_for('settings') }}"
+               class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+
+                <span>⚙️</span>
+
+                Settings
+
+            </a>
+
+
+            <a href="{{ url_for('logout') }}"
+               class="nav-item logout-item">
+
+                <span>🚪</span>
+
+                Logout
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MOBILE MENU BUTTON -->
+
+    <button class="mobile-menu-button"
+            onclick="toggleSidebar()">
+
+        ☰
+
+    </button>
+
+
+    <!-- PAGE CONTENT -->
+
+   <!-- PAGE CONTENT -->
+
+<main class="main-content">
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+   <script>
+
+    function toggleSidebar() {
+
+        const sidebar =
+            document.querySelector(".sidebar");
+
+        sidebar.classList.toggle("mobile-open");
+
+    }
+
+
+    /* Prevent mouse wheel from changing number inputs */
+
+    document.addEventListener(
+        "wheel",
+        function (event) {
+
+            if (
+                document.activeElement &&
+                document.activeElement.type === "number"
+            ) {
+                event.preventDefault();
+            }
+
+        },
+        { passive: false }
+    );
+
+    function changeNumber(button, amount) {
+
+    const wrapper = button.parentElement;
+    const input = wrapper.querySelector('input[type="number"]');
+
+    let value = parseFloat(input.value) || 0;
+
+    const min = input.min !== ""
+        ? parseFloat(input.min)
+        : -Infinity;
+
+    const max = input.max !== ""
+        ? parseFloat(input.max)
+        : Infinity;
+
+    value += amount;
+
+    if (value < min) {
+        value = min;
+    }
+
+    if (value > max) {
+        value = max;
+    }
+
+    input.value = value;
+
+    input.dispatchEvent(new Event("input", {
+        bubbles: true
+    }));
+
+}
+
+// Automatically hide flash messages after 4 seconds
+document.addEventListener("DOMContentLoaded", function () {
+    const flashMessages = document.querySelectorAll(".flash-message");
+
+    flashMessages.forEach(function (message) {
+        setTimeout(function () {
+            message.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+            message.style.opacity = "0";
+            message.style.transform = "translateY(-10px)";
+
+            setTimeout(function () {
+                message.remove();
+            }, 500);
+
+        }, 4000);
+    });
+});
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,564 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+
+Lena MiniMart | Products & Stock
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- =========================================
+     BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+        Dashboard
+    </a>
+
+    <span>
+        /
+    </span>
+
+    <span>
+        Inventory
+    </span>
+
+    <span>
+        /
+    </span>
+
+    <strong>
+        Products & Stock
+    </strong>
+
+</div>
+
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Products & Stock
+        </h1>
+
+        <p>
+            Manage your shop inventory
+        </p>
+
+    </div>
+
+
+    <div class="user-profile">
+
+        <div class="user-avatar">
+
+            {{ current_user.owner_name[0] | upper }}
+
+        </div>
+
+
+        <div>
+
+            <strong>
+                {{ current_user.owner_name }}
+            </strong>
+
+            <span>
+                {{ current_user.role | capitalize }}
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================
+     INVENTORY SUMMARY
+========================================= -->
+
+<section class="inventory-summary-section">
+
+    <div class="inventory-summary">
+
+
+        <!-- TOTAL PRODUCTS -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+                📦
+            </div>
+
+            <div>
+
+                <span>
+                    Total Products
+                </span>
+
+                <strong>
+                    {{ total_products }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ITEMS IN STOCK -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+                🧮
+            </div>
+
+            <div>
+
+                <span>
+                    Items in Stock
+                </span>
+
+                <strong>
+                    {{ total_items }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOW STOCK -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+                ⚠️
+            </div>
+
+            <div>
+
+                <span>
+                    Low Stock
+                </span>
+
+                <strong>
+                    {{ low_stock }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- STOCK VALUE -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+                💰
+            </div>
+
+            <div>
+
+                <span>
+                    Stock Value
+                </span>
+
+                <strong>
+                    KSh {{ "%.2f"|format(stock_value) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- =========================================
+     PRODUCTS CARD
+========================================= -->
+
+<section class="dashboard-card">
+
+
+    <!-- CARD HEADER -->
+
+    <div class="card-header products-header">
+
+        <div>
+
+            <h3>
+                Products & Stock
+            </h3>
+
+            <p>
+                Manage products available in your shop.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('add_product') }}"
+            class="primary-button"
+        >
+
+            + Add Product
+
+        </a>
+
+    </div>
+
+
+    <!-- SEARCH -->
+
+    <div class="product-search">
+
+        <input
+            type="text"
+            id="productSearch"
+            placeholder="🔍 Search products..."
+            onkeyup="searchProducts()"
+        >
+
+    </div>
+
+
+    <!-- =========================================
+         PRODUCTS TABLE
+    ========================================= -->
+
+    {% if products %}
+
+
+        <!-- NO SEARCH RESULTS -->
+
+        <div
+            id="noProductsMessage"
+            class="no-products-message"
+            style="display: none;"
+        >
+
+            No products found.
+
+        </div>
+
+
+        <div class="products-table-wrapper">
+
+            <table class="products-table">
+
+
+                <!-- TABLE HEADER -->
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Product
+                        </th>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th>
+                            Buying Price
+                        </th>
+
+                        <th>
+                            Selling Price
+                        </th>
+
+                        <th>
+                            Quantity
+                        </th>
+
+                        <th>
+                            Supplier
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <!-- TABLE BODY -->
+
+                <tbody id="productsTableBody">
+
+                    {% for product in products %}
+
+                    <tr>
+
+
+                        <!-- PRODUCT -->
+
+                        <td>
+
+                            <strong>
+                                {{ product.name }}
+                            </strong>
+
+                        </td>
+
+
+                        <!-- CATEGORY -->
+
+                        <td>
+
+                            {{ product.category or "—" }}
+
+                        </td>
+
+
+                        <!-- BUYING PRICE -->
+
+                        <td>
+
+                            KSh
+                            {{ "%.2f"|format(product.buying_price) }}
+
+                        </td>
+
+
+                        <!-- SELLING PRICE -->
+
+                        <td>
+
+                            KSh
+                            {{ "%.2f"|format(product.selling_price) }}
+
+                        </td>
+
+
+                        <!-- QUANTITY -->
+
+                        <td>
+
+                            {{ product.quantity }}
+
+                        </td>
+
+
+                        <!-- SUPPLIER -->
+
+                        <td>
+
+                            {{ product.supplier or "—" }}
+
+                        </td>
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+                            {% if product.quantity <= product.low_stock_level %}
+
+                                <span class="stock-status low-stock">
+
+                                    Low Stock
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="stock-status in-stock">
+
+                                    In Stock
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="product-actions">
+
+                                <a
+                                    href="{{ url_for(
+                                        'edit_product',
+                                        product_id=product.id
+                                    ) }}"
+                                    class="edit-button"
+                                >
+
+                                    ✏️ Edit
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+    {% else %}
+
+
+        <!-- =========================================
+             NO PRODUCTS
+        ========================================= -->
+
+        <div class="no-products-message">
+
+            <div class="no-products-icon">
+                📦
+            </div>
+
+            <h3>
+                No Products Yet
+            </h3>
+
+            <p>
+                Add your first product to start managing your inventory.
+            </p>
+
+
+            <a
+                href="{{ url_for('add_product') }}"
+                class="primary-button"
+            >
+
+                + Add Product
+
+            </a>
+
+        </div>
+
+
+    {% endif %}
+
+
+</section>
+
+
+<!-- =========================================
+     PRODUCT SEARCH JAVASCRIPT
+========================================= -->
+
+<script>
+
+    function searchProducts() {
+
+        const input =
+            document.getElementById("productSearch");
+
+
+        const filter =
+            input.value.toLowerCase();
+
+
+        const tableBody =
+            document.getElementById("productsTableBody");
+
+
+        const noProductsMessage =
+            document.getElementById("noProductsMessage");
+
+
+        if (!tableBody) {
+
+            return;
+
+        }
+
+
+        const rows =
+            tableBody.getElementsByTagName("tr");
+
+
+        let visibleRows = 0;
+
+
+        for (
+            let i = 0;
+            i < rows.length;
+            i++
+        ) {
+
+            const rowText =
+                rows[i].textContent.toLowerCase();
+
+
+            if (
+                rowText.includes(filter)
+            ) {
+
+                rows[i].style.display = "";
+
+                visibleRows++;
+
+            } else {
+
+                rows[i].style.display = "none";
+
+            }
+
+        }
+
+
+        if (noProductsMessage) {
+
+            if (visibleRows === 0) {
+
+                noProductsMessage.style.display =
+                    "block";
+
+            } else {
+
+                noProductsMessage.style.display =
+                    "none";
+
+            }
+
+        }
+
+    }
+
+</script>
+
+
+{% endblock %}

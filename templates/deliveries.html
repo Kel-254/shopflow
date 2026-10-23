@@ -1,0 +1,183 @@
+
+{% extends "base.html" %}
+
+{% block title %}Lena MiniMart | Deliveries{% endblock %}
+
+{% block content %}
+
+<div class="deliveries-page">
+
+    <div class="page-breadcrumb">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <span>/</span>
+        <strong>Deliveries</strong>
+    </div>
+
+    <header class="dashboard-header">
+        <div>
+            <h1>Stock Deliveries</h1>
+            <p>Track received stock, suppliers, invoices, and delivery values.</p>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar">
+                {{ current_user.owner_name[0] | upper }}
+            </div>
+            <div>
+                <strong>{{ current_user.owner_name }}</strong>
+                <span>{{ current_user.role | capitalize }}</span>
+            </div>
+        </div>
+    </header>
+
+    
+<!-- DELIVERY SUMMARY CARDS -->
+<section class="inventory-summary delivery-summary">
+
+    <div class="inventory-stat">
+        <div class="inventory-stat-content">
+            <span class="inventory-stat-label">Total Deliveries</span>
+            <strong class="inventory-stat-value">
+                {{ total_deliveries }}
+            </strong>
+            <span class="delivery-stat-note">Recorded deliveries</span>
+        </div>
+    </div>
+
+    <div class="inventory-stat">
+        <div class="inventory-stat-content">
+            <span class="inventory-stat-label">Total Delivery Value</span>
+            <strong class="inventory-stat-value">
+                KSh {{ '{:,.2f}'.format(total_delivery_value) }}
+            </strong>
+            <span class="delivery-stat-note">Combined recorded value</span>
+        </div>
+    </div>
+
+    <div class="inventory-stat">
+        <div class="inventory-stat-content">
+            <span class="inventory-stat-label">Recent Deliveries</span>
+            <strong class="inventory-stat-value">
+                {{ recent_deliveries }}
+            </strong>
+            <span class="delivery-stat-note">Last 7 days</span>
+        </div>
+    </div>
+
+</section>
+
+    <section class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3>All Deliveries</h3>
+                <p>Open a delivery to view its products and invoice information.</p>
+            </div>
+            <span class="delivery-count">
+                {{ deliveries | length }} deliveries
+            </span>
+        </div>
+
+        <div class="deliveries-search">
+            <input
+                type="search"
+                id="deliverySearch"
+                placeholder="Search delivery, supplier or invoice..."
+                aria-label="Search deliveries"
+            >
+        </div>
+
+        <div class="products-table-wrapper">
+            <table class="products-table" id="deliveriesTable">
+                <thead>
+                    <tr>
+                        <th>Delivery Number</th>
+                        <th>Supplier</th>
+                        <th>Delivery Date</th>
+                        <th>Invoice Number</th>
+                        <th>Delivery Value</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="deliveriesTableBody">
+                    {% for delivery in deliveries %}
+                    <tr>
+                        <td>
+                            <strong>{{ delivery.delivery_number }}</strong>
+                        </td>
+
+                        <td>
+                            {{ delivery.supplier.name if delivery.supplier else '—' }}
+                        </td>
+
+                        <td>
+                            {{ delivery.delivery_date.strftime('%d %b %Y') if delivery.delivery_date else '—' }}
+                        </td>
+
+                        <td>
+                            {{ delivery.invoice_number or '—' }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                KSh {{ '%.2f'|format(delivery.total_amount or 0) }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <a
+                                href="{{ url_for('delivery_details', delivery_id=delivery.id) }}"
+                                class="primary-button delivery-view-button"
+                            >
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-deliveries">
+                            <div class="empty-deliveries-icon">📦</div>
+                            <strong>No deliveries recorded yet</strong>
+                            <p>Deliveries will appear here after you receive stock.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p id="noDeliveryResults" class="no-delivery-results" hidden>
+            No deliveries match your search.
+        </p>
+    </section>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("deliverySearch");
+    const tableBody = document.getElementById("deliveriesTableBody");
+    const noResults = document.getElementById("noDeliveryResults");
+
+    if (!searchInput || !tableBody || !noResults) return;
+
+    searchInput.addEventListener("input", function () {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const rows = tableBody.querySelectorAll("tr");
+        let visibleRows = 0;
+
+        rows.forEach(function (row) {
+            if (row.querySelector(".empty-deliveries")) return;
+
+            const matches = row.textContent.toLowerCase().includes(searchTerm);
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleRows++;
+        });
+
+        noResults.hidden = visibleRows > 0;
+    });
+});
+</script>
+
+{% endblock %}

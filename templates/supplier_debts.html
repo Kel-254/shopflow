@@ -1,0 +1,376 @@
+
+{% extends "base.html" %}
+
+{% block title %}Lena MiniMart | Supplier Debts{% endblock %}
+
+{% block content %}
+
+ <!-- PAGE INTRODUCTION -->
+<div class="page-breadcrumb">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <span>/</span>
+        <span>Purchasing</span>
+        <span>/</span>
+        <strong>Supplier Debts</strong>
+</div>
+
+<header class="sd-header">
+        <div>
+            <div class="sd-eyebrow">
+                <span class="sd-eyebrow-dot"></span>
+                PURCHASING & FINANCE
+            </div>
+
+            <h1>Supplier Debts</h1>
+
+            <p>
+                Keep track of supplier invoices, payments, and outstanding balances.
+            </p>
+        </div>
+
+        <a href="{{ url_for('suppliers') }}" class="sd-secondary-button">
+            <span>🚚</span>
+            View Suppliers
+            <span>→</span>
+        </a>
+</header>
+
+
+    <!-- FINANCIAL SUMMARY -->
+    <section class="sd-summary">
+
+        <article class="sd-summary-card sd-deliveries-card">
+            <div class="sd-summary-top">
+                <div class="sd-summary-icon">📦</div>
+                <span class="sd-summary-label">Stock Received</span>
+            </div>
+
+            <p class="sd-summary-title">Total Deliveries</p>
+
+            <h2>
+                KSh {{ "{:,.2f}".format(grand_total_deliveries) }}
+            </h2>
+
+            <div class="sd-summary-footer">
+                <span class="sd-footer-dot"></span>
+                Total value of recorded deliveries
+            </div>
+        </article>
+
+
+        <article class="sd-summary-card sd-payments-card">
+            <div class="sd-summary-top">
+                <div class="sd-summary-icon">💳</div>
+                <span class="sd-summary-label">Payments</span>
+            </div>
+
+            <p class="sd-summary-title">Total Paid</p>
+
+            <h2>
+                KSh {{ "{:,.2f}".format(grand_total_payments) }}
+            </h2>
+
+            <div class="sd-summary-footer">
+                <span class="sd-footer-dot"></span>
+                Total supplier payments recorded
+            </div>
+        </article>
+
+
+        <article class="sd-summary-card sd-outstanding-card">
+            <div class="sd-summary-top">
+                <div class="sd-summary-icon">⚖️</div>
+                <span class="sd-summary-label">Outstanding</span>
+            </div>
+
+            <p class="sd-summary-title">Total Supplier Debt</p>
+
+            <h2>
+                KSh {{ "{:,.2f}".format(grand_total_outstanding) }}
+            </h2>
+
+            <div class="sd-summary-footer">
+                <span class="sd-footer-dot"></span>
+                Remaining balance to be paid
+            </div>
+        </article>
+
+    </section>
+
+
+    <!-- SUPPLIER BALANCES -->
+    <section class="sd-panel">
+
+        <div class="sd-panel-header">
+            <div class="sd-panel-title-group">
+                <div class="sd-panel-icon">📋</div>
+
+                <div>
+                    <h2>Supplier Balances</h2>
+                    <p>Review every supplier's payment position.</p>
+                </div>
+            </div>
+
+            <div class="sd-supplier-count">
+                <span class="sd-count-dot"></span>
+                {{ supplier_summaries|length }}
+                Supplier{% if supplier_summaries|length != 1 %}s{% endif %}
+            </div>
+        </div>
+
+
+        {% if supplier_summaries %}
+
+        <!-- SEARCH AND FILTER -->
+        <div class="sd-toolbar">
+            <div class="sd-search-box">
+                <span>🔍</span>
+
+                <input
+                    type="search"
+                    id="sdSupplierSearch"
+                    placeholder="Search supplier by name..."
+                    autocomplete="off"
+                    aria-label="Search suppliers"
+                >
+
+                <button
+                    type="button"
+                    id="sdClearSearch"
+                    class="sd-clear-search"
+                    aria-label="Clear search"
+                    hidden
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="sd-filter-group">
+                <label for="sdBalanceFilter">Filter:</label>
+
+                <select id="sdBalanceFilter" class="sd-balance-filter">
+                   <option value="all">All Suppliers</option>
+                   <option value="outstanding">Outstanding</option>
+                   <option value="paid">Fully Paid</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!-- BALANCE TABLE -->
+        <div class="sd-table-wrapper">
+
+            <table class="sd-table">
+
+                <thead>
+                    <tr>
+                        <th>SUPPLIER</th>
+                        <th>TOTAL DELIVERIES</th>
+                        <th>TOTAL PAID</th>
+                        <th>OUTSTANDING</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+
+                <tbody id="sdSupplierTableBody">
+
+                    {% for item in supplier_summaries %}
+
+                    <tr
+                        class="sd-supplier-row"
+                        data-supplier-name="{{ item.supplier.name|lower }}"
+                        data-balance-status="{{ 'outstanding' if item.outstanding > 0 else 'paid' }}"
+                    >
+
+                        <td>
+                            <div class="sd-supplier-cell">
+
+                                <div class="sd-supplier-avatar">
+                                    {{ item.supplier.name[:1]|upper }}
+                                </div>
+
+                                <div class="sd-supplier-info">
+                                    <strong>{{ item.supplier.name }}</strong>
+                                    <span>Supplier account</span>
+                                </div>
+
+                            </div>
+                        </td>
+
+
+                        <td>
+                            <span class="sd-money">
+                                KSh {{ "{:,.2f}".format(item.total_deliveries) }}
+                            </span>
+                        </td>
+
+
+                        <td>
+                            <span class="sd-money sd-paid-money">
+                                KSh {{ "{:,.2f}".format(item.total_payments) }}
+                            </span>
+                        </td>
+
+
+                        <td>
+                            {% if item.outstanding > 0 %}
+                                <span class="sd-balance-badge sd-balance-due">
+                                    <span>●</span>
+                                    KSh {{ "{:,.2f}".format(item.outstanding) }}
+                                </span>
+                            {% else %}
+                                <span class="sd-balance-badge sd-balance-clear">
+                                    <span>✓</span>
+                                    KSh 0.00
+                                </span>
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+                            <a
+                                href="{{ url_for('supplier_details', supplier_id=item.supplier.id) }}"
+                                class="sd-view-button"
+                            >
+                                View Details
+                                <span>→</span>
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- NO SEARCH RESULTS -->
+        <div id="sdNoSearchResults" class="sd-empty-state" hidden>
+            <div class="sd-empty-icon">🔎</div>
+            <h3>No matching suppliers</h3>
+            <p>Try another supplier name.</p>
+        </div>
+
+
+        <div class="sd-panel-footer">
+            <span>
+                Showing <strong id="sdVisibleCount">{{ supplier_summaries|length }}</strong>
+                of {{ supplier_summaries|length }} suppliers
+            </span>
+
+            <span>
+                <span class="sd-footer-dot"></span>
+                Balances use recorded deliveries and payments
+            </span>
+        </div>
+
+
+        {% else %}
+
+        <!-- EMPTY SUPPLIER LIST -->
+        <div class="sd-empty-state">
+            <div class="sd-empty-icon">💳</div>
+
+            <h3>No supplier balances yet</h3>
+
+            <p>
+                Register a supplier and record a stock delivery
+                to start tracking outstanding balances.
+            </p>
+
+            <a href="{{ url_for('suppliers') }}" class="sd-primary-button">
+                + View Suppliers
+            </a>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- INFORMATION NOTE -->
+    <div class="sd-information">
+        <span>ℹ️</span>
+
+        <p>
+            <strong>About these figures:</strong>
+            Total deliveries show recorded delivery values.
+            Total paid shows recorded supplier payments.
+            Outstanding debt is the delivery value minus payments,
+            with balances below zero displayed as zero.
+        </p>
+    </div>
+
+</div>
+<!-- =========================================
+     SUPPLIER SEARCH
+========================================= -->
+
+<script>
+(function () {
+    const searchInput = document.getElementById("sdSupplierSearch");
+    const filterSelect = document.getElementById("sdBalanceFilter");
+    const rows = document.querySelectorAll(".sd-supplier-row");
+    const noResults = document.getElementById("sdNoSearchResults");
+    const clearButton = document.getElementById("sdClearSearch");
+    const visibleCount = document.getElementById("sdVisibleCount");
+
+    if (!searchInput) return;
+
+    function filterSuppliers() {
+        const term = searchInput.value.toLowerCase().trim();
+        const selectedStatus = filterSelect ? filterSelect.value : "all";
+        let visible = 0;
+
+        rows.forEach(function (row) {
+            const name = (row.dataset.supplierName || "").toLowerCase();
+            const status = row.dataset.balanceStatus || "paid";
+
+            const matchesName = name.includes(term);
+            const matchesStatus =
+                selectedStatus === "all" || status === selectedStatus;
+
+            const matches = matchesName && matchesStatus;
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visible++;
+        });
+
+        if (noResults) {
+            noResults.hidden = visible > 0;
+        }
+
+        if (clearButton) {
+            clearButton.hidden = term === "";
+        }
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+    }
+
+    searchInput.addEventListener("input", filterSuppliers);
+
+    if (filterSelect) {
+        filterSelect.addEventListener("change", filterSuppliers);
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener("click", function () {
+            searchInput.value = "";
+            filterSuppliers();
+            searchInput.focus();
+        });
+    }
+
+    filterSuppliers();
+})();
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Receive Stock
+{% endblock %}
+
+{% block content %}
+
+<div class="page-breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <span>/</span>
+
+    <span>Purchasing</span>
+    <span>/</span>
+
+    <a href="{{ url_for('purchases') }}">
+        Purchase Orders
+    </a>
+    <span>/</span>
+
+    <a href="{{ url_for(
+        'purchase_details',
+        purchase_id=purchase_order.id
+    ) }}">
+        #{{ purchase_order.order_number }}
+    </a>
+    <span>/</span>
+
+    <strong>Receive Stock</strong>
+</div>
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>
+            Receive Stock
+        </h1>
+
+        <p>
+            Record stock received against a purchase order.
+        </p>
+    </div>
+
+    <a
+       href="{{ url_for(
+           'purchase_details',
+            purchase_id=purchase_order.id
+       )}}"
+       class="secondary-button"
+    >
+        ← Back to Purchase Order
+    </a>
+
+</header>
+
+
+<!-- PURCHASE ORDER INFORMATION -->
+
+<section class="supplier-profile-card">
+
+    <div class="supplier-profile-header">
+
+        <div class="supplier-profile-icon">
+            📥
+        </div>
+
+        <div>
+
+            <span>PURCHASE ORDER</span>
+
+            <h2>
+                {{ purchase_order.order_number }}
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="supplier-information-grid">
+
+        <div class="supplier-information-item">
+
+            <span>🚚 Supplier</span>
+
+            <strong>
+                {{ purchase_order.supplier.name }}
+            </strong>
+
+        </div>
+
+
+        <div class="supplier-information-item">
+
+            <span>📅 Order Date</span>
+
+            <strong>
+                {{ purchase_order.order_date.strftime(
+                    "%d %b %Y"
+                ) }}
+            </strong>
+
+        </div>
+
+
+        <div class="supplier-information-item">
+
+            <span>📊 Status</span>
+
+            <strong>
+                {{ purchase_order.status }}
+            </strong>
+
+        </div>
+
+
+        <div class="supplier-information-item">
+
+            <span>💰 Expected Total</span>
+
+            <strong>
+                KSh
+                {{ "%.2f"|format(
+                    purchase_order.expected_total or 0
+                ) }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- DELIVERY INFORMATION -->
+
+<section class="supplier-history-card">
+
+    <div class="supplier-history-header">
+
+        <h2>
+            Delivery Information
+        </h2>
+
+        <p>
+            Enter the details of the stock delivery.
+        </p>
+
+    </div>
+
+
+    <form
+        method="POST"
+        class="receiving-form"
+        enctype="multipart/form-data"
+    >
+     
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="supplier-information-grid">
+
+
+            <!-- DELIVERY NUMBER -->
+
+            <div class="form-group">
+
+                <label for="delivery_number">
+                    Delivery Number
+                </label>
+
+                <input
+                    type="text"
+                    id="delivery_number"
+                    name="delivery_number"
+                    placeholder="e.g. DEL-00015"
+                    required
+                >
+
+            </div>
+
+
+            <!-- INVOICE NUMBER -->
+
+            <div class="form-group">
+
+                <label for="invoice_number">
+                    Invoice Number
+                </label>
+
+                <input
+                    type="text"
+                    id="invoice_number"
+                    name="invoice_number"
+                    placeholder="e.g. INV-45892"
+                >
+
+            </div>
+
+
+            <!-- DELIVERY DATE -->
+
+            <div class="form-group">
+
+                <label for="delivery_date">
+                    Delivery Date
+                </label>
+
+                <input
+                    type="date"
+                    id="delivery_date"
+                    name="delivery_date"
+                    max="{{ current_date }}"
+                    value="{{ current_date }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- INVOICE DATE -->
+
+            <div class="form-group">
+
+                <label for="invoice_date">
+                    Invoice Date
+                </label>
+
+                <input
+                    type="date"
+                    id="invoice_date"
+                    name="invoice_date"
+                    max="{{ current_date }}"
+                    value="{{ current_date }}"
+                >
+
+                <input
+                    type="file"
+                    id="invoice_file"
+                    name="invoice_file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                >
+                <small>
+                    Upload the supplier invoice as PDF, JPG, JPEG or PNG.
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCTS BEING RECEIVED -->
+
+        <div class="receiving-products">
+
+            <div class="supplier-history-header">
+
+                <h2>
+                    Stock Received
+                </h2>
+
+                <p>
+                    Enter the actual quantity received for
+                    each product.
+                </p>
+
+            </div>
+
+
+            <div class="supplier-history-table-wrapper">
+
+                <table class="supplier-history-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Product
+                            </th>
+
+                            <th>
+                                Ordered
+                            </th>
+
+                            <th>
+                                Already Received
+                            </th>
+
+                            <th>
+                                Remaining
+                            </th>
+
+                            <th>
+                                Quantity Received
+                            </th>
+
+                            <th>
+                                Buying Price
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for item in purchase_order.items %}
+
+                        {% set remaining =
+                            item.quantity_ordered -
+                            item.quantity_received
+                        %}
+
+                        <tr>
+
+                            <td>
+
+                                <strong>
+                                    {{ item.product.name }}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+                                {{ item.quantity_ordered }}
+                            </td>
+
+
+                            <td>
+                                {{ item.quantity_received }}
+                            </td>
+
+
+                            <td>
+                                {{ remaining }}
+                            </td>
+
+
+                            <td>
+
+                                <input
+                                    type="number"
+                                    name="received_{{ item.id }}"
+                                    min="0"
+                                    max="{{ remaining }}"
+                                    value="0"
+                                    {% if remaining == 0 %}
+                                        disabled
+                                    {% endif %}
+                                >
+
+                            </td>
+
+
+                            <td>
+                                <input
+                                    type="number"
+                                    name="buying_price_{{ item.id }}"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ '%.2f'|format(item.buying_price) }}"
+                                    required
+                                >
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- NOTES -->
+
+        <div class="form-group receiving-notes">
+
+            <label for="notes">
+                Notes
+            </label>
+
+            <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                placeholder="Add any notes about this delivery..."
+            ></textarea>
+
+        </div>
+
+
+        <!-- BUTTON -->
+
+        <div class="supplier-edit-action">
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                📥 Receive Stock
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

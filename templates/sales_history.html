@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Sales History
+{% endblock %}
+
+{% block content %}
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Sales History</h1>
+
+        <p>
+            View all sales made in your shop.
+        </p>
+    </div>
+
+    <div class="user-profile">
+
+        <strong>
+            {{ current_user.owner_name }}
+        </strong>
+
+        <span>
+            {{ current_user.role }}
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- SALES SUMMARY -->
+
+<section class="sales-summary">
+
+    <div class="sales-summary-card">
+
+        <div class="sales-summary-icon">
+            🧾
+        </div>
+
+        <div>
+            <span>Number of Sales</span>
+
+            <h2>
+                {{ total_sales }}
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="sales-summary-card">
+
+        <div class="sales-summary-icon">
+            💰
+        </div>
+
+        <div>
+            <span>Total Revenue</span>
+
+            <h2>
+                KSh {{ "%.2f"|format(total_revenue) }}
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="sales-summary-card">
+
+        <div class="sales-summary-icon">
+            📦
+        </div>
+
+        <div>
+            <span>Items Sold</span>
+
+            <h2>
+                {{ total_items_sold }}
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="sales-summary-card">
+
+        <div class="sales-summary-icon">
+            📅
+        </div>
+
+        <div>
+            <span>Today's Revenue</span>
+
+            <h2>
+                KSh {{ "%.2f"|format(todays_revenue) }}
+            </h2>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- SALES HISTORY TABLE -->
+
+<section class="dashboard-card sales-history-card">
+
+    <!-- SALES FILTER BAR -->
+
+   <div class="sales-filter-bar">
+
+       <div class="sales-search-box">
+
+           <span class="sales-search-icon">🔍</span>
+
+           <input
+                type="text"
+                id="salesSearch"
+                placeholder="Search product or Sale ID..."
+             >
+
+        </div>
+
+        <button
+             type="button"
+             class="clear-sales-filter"
+             onclick="clearSalesFilters()"
+        >
+            ↻ Clear
+        </button>
+
+    </div>
+
+    <div class="card-header">
+
+        <div>
+            <h3>Recent Sales</h3>
+
+            <p>
+                A record of completed transactions.
+            </p>
+        </div>
+
+    </div>
+
+
+    {% if sales %}
+
+    <div class="sales-history-wrapper">
+
+        <table class="sales-history-table">
+
+            <thead>
+
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Sale ID</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for sale in sales %}
+
+                    {% for item in sale.items %}
+
+                    <tr>
+
+                        <td>
+                            {{ format_eat(sale.created_at) }}
+                          
+                        </td>
+
+                        <td>
+                            #{{ sale.id }}
+                        </td>
+
+                        <td>
+                            {{ item.product.name }}
+                        </td>
+
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+
+                        <td>
+                            KSh {{ "%.2f"|format(item.selling_price) }}
+                        </td>
+
+                        <td class="sale-total">
+                            KSh {{ "%.2f"|format(item.total_price) }}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{{ url_for('sale_details', sale_id=sale.id) }}"
+                                class="view-sale-button"
+                            >
+                                View
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="no-sales-message">
+
+        <div class="no-sales-icon">
+            🧾
+        </div>
+
+        <h3>No Sales Yet</h3>
+
+        <p>
+            Completed sales will appear here.
+        </p>
+
+        <a
+            href="{{ url_for('sales') }}"
+            class="primary-button"
+        >
+            Make a Sale
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+<script>
+
+    const salesSearch =
+        document.getElementById("salesSearch");
+
+
+    function filterSales() {
+
+        const searchValue =
+            salesSearch.value.toLowerCase().trim();
+
+        const rows =
+            document.querySelectorAll(
+                ".sales-history-table tbody tr"
+            );
+
+        rows.forEach(row => {
+
+            const saleId =
+                row.cells[1].textContent
+                    .toLowerCase()
+                    .trim();
+
+            const product =
+                row.cells[2].textContent
+                    .toLowerCase()
+                    .trim();
+
+            const matchesSearch =
+                saleId.includes(searchValue) ||
+                product.includes(searchValue);
+
+            row.style.display =
+                matchesSearch ? "" : "none";
+
+        });
+
+    }
+
+
+    salesSearch.addEventListener(
+        "input",
+        filterSales
+    );
+
+
+    function clearSalesFilters() {
+
+        salesSearch.value = "";
+
+        filterSales();
+
+    }
+
+</script>
+
+{% endblock %}

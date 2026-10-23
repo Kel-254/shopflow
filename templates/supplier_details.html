@@ -1,0 +1,935 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Supplier Details
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================
+     PAGE BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+        Dashboard
+    </a>
+
+    <span>/</span>
+
+    <span>
+        Purchasing
+    </span>
+
+    <span>/</span>
+
+    <a href="{{ url_for('suppliers') }}">
+        Suppliers
+    </a>
+
+    <span>/</span>
+
+    <strong>
+        {{ supplier.name }}
+    </strong>
+
+</div>
+
+
+<!-- =========================================
+     PAGE HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Supplier Details
+        </h1>
+
+        <p>
+            View supplier information and procurement history.
+        </p>
+
+    </div>
+
+
+    <div class="header-actions">
+
+        <a
+            href="{{ url_for('suppliers') }}"
+            class="secondary-button"
+        >
+            ← Back to Suppliers
+        </a>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================
+     SUPPLIER SUMMARY CARDS
+========================================= -->
+
+<section class="supplier-summary">
+
+    <!-- PURCHASE ORDERS -->
+
+    <div class="supplier-summary-card">
+
+        <span>
+            Purchase Orders
+        </span>
+
+        <h2>
+            {{ purchase_orders|length }}
+        </h2>
+
+    </div>
+
+
+    <!-- DELIVERIES -->
+
+    <div class="supplier-summary-card">
+
+        <span>
+            Deliveries
+        </span>
+
+        <h2>
+            {{ deliveries|length }}
+        </h2>
+
+    </div>
+
+
+    <!-- ORDERED VALUE -->
+
+    <div class="supplier-summary-card">
+
+        <span>
+            Ordered Value
+        </span>
+
+        <h2>
+            KSh {{ "%.2f"|format(total_purchase_value) }}
+        </h2>
+
+    </div>
+
+
+    <!-- RECEIVED VALUE -->
+
+    <div class="supplier-summary-card">
+
+        <span>
+            Received Value
+        </span>
+
+        <h2>
+            KSh {{ "%.2f"|format(total_deliveries_value) }}
+        </h2>
+
+    </div>
+
+
+    <!-- OUTSTANDING -->
+
+    <div class="supplier-summary-card">
+
+        <span>
+            Outstanding Value
+        </span>
+
+        <h2>
+            KSh {{ "%.2f"|format(outstanding_value) }}
+        </h2>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================
+     SUPPLIER PROFILE
+========================================= -->
+
+<section class="supplier-profile-card">
+
+    <!-- SUPPLIER HEADER -->
+
+    <div class="supplier-profile-header">
+
+        <div class="supplier-profile-icon">
+            🚚
+        </div>
+
+        <div>
+
+            <span>
+                SUPPLIER
+            </span>
+
+            <h2>
+                {{ supplier.name }}
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUPPLIER INFORMATION -->
+
+    <div class="supplier-information-grid">
+
+        <!-- PHONE -->
+
+        <div class="supplier-information-item">
+
+            <span>
+                📞 Phone
+            </span>
+
+            <strong>
+                {{ supplier.phone or "Not provided" }}
+            </strong>
+
+        </div>
+
+
+        <!-- EMAIL -->
+
+        <div class="supplier-information-item">
+
+            <span>
+                ✉️ Email
+            </span>
+
+            <strong>
+                {{ supplier.email or "Not provided" }}
+            </strong>
+
+        </div>
+
+
+        <!-- ADDRESS -->
+
+        <div class="supplier-information-item">
+
+            <span>
+                📍 Address
+            </span>
+
+            <strong>
+                {{ supplier.address or "Not provided" }}
+            </strong>
+
+        </div>
+
+
+        <!-- KRA PIN -->
+
+        <div class="supplier-information-item">
+
+            <span>
+                🧾 KRA PIN
+            </span>
+
+            <strong>
+                {{ supplier.kra_pin or "Not provided" }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- NOTES -->
+
+    {% if supplier.notes %}
+
+    <div class="supplier-notes">
+
+        <span>
+            📝 Notes
+        </span>
+
+        <p>
+            {{ supplier.notes }}
+        </p>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- EDIT SUPPLIER -->
+
+    <div class="supplier-edit-action">
+
+        <a
+            href="{{ url_for(
+                'edit_supplier',
+                supplier_id=supplier.id
+            ) }}"
+            class="primary-button"
+        >
+            ✏️ Edit Supplier
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================
+     PURCHASE ORDERS
+========================================= -->
+
+<section class="supplier-history-card">
+
+    <div class="supplier-history-header">
+
+        <div>
+
+            <h2>
+                Purchase Orders
+            </h2>
+
+            <p>
+                Orders placed with this supplier.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if purchase_orders %}
+
+    <div class="supplier-history-table-wrapper">
+
+        <table class="supplier-history-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Order
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Expected Total
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for order in purchase_orders %}
+
+                <tr>
+
+                    <!-- ORDER NUMBER -->
+
+                    <td>
+
+                        <strong>
+                            {{ order.order_number }}
+                        </strong>
+
+                    </td>
+
+
+                    <!-- DATE -->
+
+                    <td>
+
+                        {{ order.order_date.strftime(
+                            "%d %b %Y"
+                        ) }}
+
+                    </td>
+
+
+                    <!-- STATUS -->
+
+                    <td>
+
+                        <span class="purchase-status
+
+                            {% if order.status == 'Received' %}
+
+                                received
+
+                            {% elif order.status == 'Partially Received' %}
+
+                                partial
+
+                            {% else %}
+
+                                pending
+
+                            {% endif %}
+
+                        ">
+
+                            {{ order.status }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- EXPECTED TOTAL -->
+
+                    <td>
+
+                        KSh
+                        {{ "%.2f"|format(
+                            order.expected_total or 0
+                        ) }}
+
+                    </td>
+
+
+                    <!-- VIEW -->
+
+                    <td>
+
+                        <a
+                            href="{{ url_for(
+                                'purchase_details',
+                                purchase_id=order.id
+                            ) }}"
+                            class="view-purchase-button"
+                        >
+                            View
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- NO PURCHASE ORDERS -->
+
+    <div class="supplier-empty-state">
+
+        <div>
+            📦
+        </div>
+
+        <h3>
+            No Purchase Orders
+        </h3>
+
+        <p>
+            No purchase orders have been placed
+            with this supplier yet.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+
+<!-- =========================================
+     DELIVERIES RECEIVED
+========================================= -->
+
+<section class="supplier-history-card supplier-payment-history-card">
+
+    <div class="supplier-history-header">
+
+        <div>
+
+            <h2>
+                Deliveries Received
+            </h2>
+
+            <p>
+                Stock deliveries received from this supplier.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if deliveries %}
+
+    <div class="supplier-history-table-wrapper">
+
+        <table class="supplier-history-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Delivery
+                    </th>
+
+                    <th>
+                        Delivery Date
+                    </th>
+
+                    <th>
+                        Invoice
+                    </th>
+
+                    <th>
+                        Total Amount
+                    </th>
+
+                    <th>
+                        Outstanding
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for delivery in deliveries %}
+
+                <tr>
+
+                    <!-- DELIVERY NUMBER -->
+
+                    <td>
+
+                        <strong>
+                            {{ delivery.delivery_number }}
+                        </strong>
+
+                    </td>
+
+
+                    <!-- DELIVERY DATE -->
+
+                    <td>
+
+                        {{ delivery.delivery_date.strftime(
+                            "%d %b %Y"
+                        ) }}
+
+                    </td>
+
+
+                    <!-- INVOICE -->
+
+                    <td>
+
+                        {{ delivery.invoice_number
+                            or "Not provided" }}
+
+                    </td>
+
+
+                    <!-- TOTAL -->
+
+                    <td>
+
+                        KSh
+                        {{ "%.2f"|format(
+                            delivery.total_amount or 0
+                        ) }}
+
+                    </td>
+
+                    <!-- OUTSTANDING BALANCE -->
+                    <td>
+                        {% set paid = delivery.supplier_payments
+                            |sum(attribute='amount') %}
+                        
+                            {% set balance = (delivery.total_amount or 0) - paid %}
+
+                            <strong class="{% if balance > 0 %}debt-outstanding{% else %}debt-cleared{% endif %}">
+                                KSH {{ "%.2f"|format([balance, 0]|max) }}
+                            </strong>
+                    </td> 
+
+                    
+                    <td>
+                        {% if balance > 0 %}
+
+                        <button
+                            type="button"
+                            class="primary-button open-payment-modal"
+                            data-delivery-id="{{ delivery.id }}"
+                            data-delivery-number="{{ delivery.delivery_number }}"
+                            data-supplier-id="{{ supplier.id }}"
+                            data-balance="{{ '%.2f'|format([balance, 0]|max) }}"
+                        >
+                           💳 Record Payment
+                        </button>
+
+                        {% else %}
+
+                        <span class="debt-cleared">✓ Paid</span>
+
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- NO DELIVERIES -->
+
+    <div class="supplier-empty-state">
+
+        <div>
+            📥
+        </div>
+
+        <h3>
+            No Deliveries Yet
+        </h3>
+
+        <p>
+            Stock deliveries from this supplier
+            will appear here.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+
+<!-- SUPPLIER PAYMENT HISTORY -->
+
+<section class="supplier-history-card">
+
+    <div class="supplier-history-header">
+        <div>
+            <h2>Payment History</h2>
+            <p>Payments recorded for this supplier.</p>
+        </div>
+    </div>
+
+    {% if payments %}
+    <div class="supplier-history-table-wrapper">
+        <table class="supplier-history-table">
+            <thead>
+                <tr>
+                    <th>Delivery</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.delivery.delivery_number }}</td>
+
+                    <td>
+                        {{ payment.payment_date.strftime("%d %b %Y") }}
+                    </td>
+
+                    <td>
+                        KSh {{ "%.2f"|format(payment.amount) }}
+                    </td>
+
+                    <td>{{ payment.payment_method or "Not specified" }}</td>
+
+                    <td>{{ payment.reference_number or "—" }}</td>
+
+                    <td>{{ payment.notes or "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="supplier-empty-state">
+        <div>💳</div>
+        <h3>No Payments Recorded</h3>
+        <p>Payments you record against delivery invoices will appear here.</p>
+    </div>
+    {% endif %}
+
+</section>
+
+
+<!-- =========================================
+     FLOATING SUPPLIER PAYMENT MODAL
+========================================= -->
+
+<div
+    id="supplierPaymentModal"
+    class="supplier-payment-modal"
+    aria-hidden="true"
+>
+    <div
+        class="supplier-payment-backdrop"
+        data-close-payment-modal
+    ></div>
+
+    <section
+        class="supplier-payment-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="supplierPaymentTitle"
+        tabindex="-1"
+    >
+        <div class="supplier-payment-modal-header">
+            <div class="supplier-payment-modal-icon">💳</div>
+
+            <div class="supplier-payment-modal-heading">
+                <h2 id="supplierPaymentTitle">Record Payment</h2>
+                <p>Supplier invoice payment</p>
+            </div>
+
+            <button
+                type="button"
+                class="supplier-payment-close"
+                aria-label="Close payment form"
+                data-close-payment-modal
+            >
+                &times;
+            </button>
+        </div>
+
+        <div class="supplier-payment-invoice">
+            <span>Delivery invoice</span>
+            <strong id="paymentDeliveryNumber">—</strong>
+
+            <span>Outstanding balance</span>
+            <strong id="paymentOutstandingBalance">KSh 0.00</strong>
+        </div>
+
+        <form
+            id="supplierPaymentForm"
+            method="POST"
+            action=""
+            class="supplier-payment-modal-form"
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="paymentAmount">Payment Amount (KSh)</label>
+            <input
+                id="paymentAmount"
+                type="number"
+                name="amount"
+                min="0.01"
+                step="0.01"
+                required
+                placeholder="Enter amount paid"
+            >
+
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="payment_method" required>
+                <option value="Cash">Cash</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label for="paymentReference">Reference Number (optional)</label>
+            <input
+                id="paymentReference"
+                type="text"
+                name="reference_number"
+                placeholder="e.g. M-Pesa code"
+            >
+
+            <label for="paymentNotes">Notes (optional)</label>
+            <textarea
+                id="paymentNotes"
+                name="notes"
+                rows="3"
+                placeholder="Additional payment details"
+            ></textarea>
+
+            <div class="supplier-payment-modal-actions">
+                <button
+                    type="button"
+                    class="secondary-button"
+                    data-close-payment-modal
+                >
+                    Cancel
+                </button>
+
+                <button type="submit" class="primary-button">
+                    Save Payment
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+
+<script>
+(function () {
+    const modal = document.getElementById("supplierPaymentModal");
+
+    if (!modal || modal.dataset.initialized === "true") {
+        return;
+    }
+
+    modal.dataset.initialized = "true";
+
+    const dialog = modal.querySelector(".supplier-payment-dialog");
+    const form = document.getElementById("supplierPaymentForm");
+    const amountInput = document.getElementById("paymentAmount");
+    const referenceInput = document.getElementById("paymentReference");
+    const deliveryNumber = document.getElementById("paymentDeliveryNumber");
+    const balanceLabel = document.getElementById("paymentOutstandingBalance");
+
+    let previousFocus = null;
+
+    function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("payment-modal-open");
+
+        if (previousFocus) {
+            previousFocus.focus();
+        }
+    }
+
+    document.querySelectorAll(".open-payment-modal").forEach(function (button) {
+        button.addEventListener("click", function () {
+            previousFocus = button;
+
+            const supplierId = button.dataset.supplierId;
+            const deliveryId = button.dataset.deliveryId;
+            const number = button.dataset.deliveryNumber;
+            const balance = Number(button.dataset.balance);
+
+            if (!supplierId || !deliveryId || !Number.isFinite(balance) || balance <= 0) {
+                return;
+            }
+
+            form.action =
+                "/suppliers/" + encodeURIComponent(supplierId) +
+                "/deliveries/" + encodeURIComponent(deliveryId) +
+                "/pay";
+
+            deliveryNumber.textContent = number || "Delivery";
+            balanceLabel.textContent = "KSh " + balance.toLocaleString(
+                "en-KE",
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            );
+
+            amountInput.max = balance.toFixed(2);
+            amountInput.value = "";
+            referenceInput.value = "";
+            form.querySelector("textarea[name='notes']").value = "";
+
+            modal.classList.add("is-open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("payment-modal-open");
+
+            amountInput.focus();
+        });
+    });
+
+    modal.querySelectorAll("[data-close-payment-modal]").forEach(function (element) {
+        element.addEventListener("click", closeModal);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (!modal.classList.contains("is-open")) {
+            return;
+        }
+
+        if (event.key === "Escape") {
+            closeModal();
+            return;
+        }
+
+        if (event.key === "Tab") {
+            const focusable = dialog.querySelectorAll(
+                "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)"
+            );
+
+            if (!focusable.length) {
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+    form.addEventListener("submit", function (event) {
+        const amount = Number(amountInput.value);
+        const balance = Number(amountInput.max);
+
+        if (!Number.isFinite(amount) || amount <= 0 || amount > balance) {
+            event.preventDefault();
+            alert("Enter a valid payment amount within the outstanding balance.");
+        }
+    });
+})();
+</script>
+
+
+{% endblock %}

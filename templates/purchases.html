@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Purchase Orders
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================
+     PAGE BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+        Dashboard
+    </a>
+
+    <span>/</span>
+
+    <span>
+        Purchasing
+    </span>
+
+    <span>/</span>
+
+    <strong>
+        Purchase Orders
+    </strong>
+
+</div>
+
+
+<!-- =========================================
+     PAGE HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Purchase Orders
+        </h1>
+
+        <p>
+            Manage purchase orders, deliveries and stock receiving.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ url_for('add_purchase_order') }}"
+        class="primary-button"
+    >
+        + Create Purchase Order
+    </a>
+
+</header>
+
+
+<!-- =========================================
+     PURCHASE SUMMARY
+========================================= -->
+
+<section class="purchase-summary">
+
+    <!-- TOTAL ORDERS -->
+
+    <div class="purchase-summary-card">
+
+        <div class="purchase-summary-icon">
+            📋
+        </div>
+
+        <div>
+
+            <span>
+                Total Orders
+            </span>
+
+            <h2>
+                {{ purchase_orders|length }}
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <!-- PENDING ORDERS -->
+
+    <div class="purchase-summary-card">
+
+        <div class="purchase-summary-icon">
+            ⏳
+        </div>
+
+        <div>
+
+            <span>
+                Pending Orders
+            </span>
+
+            <h2>
+                {{
+                    purchase_orders
+                    | selectattr("status", "equalto", "Pending")
+                    | list
+                    | length
+                }}
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECEIVED ORDERS -->
+
+    <div class="purchase-summary-card">
+
+        <div class="purchase-summary-icon">
+            🚚
+        </div>
+
+        <div>
+
+            <span>
+                Received Orders
+            </span>
+
+            <h2>
+                {{
+                    purchase_orders
+                    | selectattr("status", "equalto", "Received")
+                    | list
+                    | length
+                }}
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <!-- PURCHASE VALUE -->
+
+    <div class="purchase-summary-card">
+
+        <div class="purchase-summary-icon">
+            💰
+        </div>
+
+        <div>
+
+            <span>
+                Purchase Value
+            </span>
+
+            <h2>
+                KSh {{ "%.2f"|format(
+                    purchase_orders
+                    | map(attribute="expected_total")
+                    | sum
+                ) }}
+            </h2>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================
+     PURCHASE ORDERS
+========================================= -->
+
+<section class="dashboard-card purchases-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h3>
+                Purchase Orders
+            </h3>
+
+            <p>
+                Orders placed with your suppliers.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if purchase_orders %}
+
+    <div class="purchases-table-wrapper">
+
+        <table class="purchases-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Order
+                    </th>
+
+                    <th>
+                        Supplier
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Expected Total
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for order in purchase_orders %}
+
+                <tr>
+
+                    <!-- ORDER -->
+
+                    <td>
+
+                        <strong>
+                            #{{ order.order_number }}
+                        </strong>
+
+                    </td>
+
+
+                    <!-- SUPPLIER -->
+
+                    <td>
+                        {{ order.supplier.name }}
+                    </td>
+
+
+                    <!-- DATE -->
+
+                    <td>
+
+                        {{ order.order_date.strftime(
+                            '%d %b %Y'
+                        ) }}
+
+                    </td>
+
+
+                    <!-- STATUS -->
+
+                    <td>
+
+                        {% if order.status == "Pending" %}
+
+                        <span class="purchase-status pending">
+                            Pending
+                        </span>
+
+                        {% elif order.status == "Received" %}
+
+                        <span class="purchase-status received">
+                            Received
+                        </span>
+
+                        {% elif order.status == "Partially Received" %}
+
+                        <span class="purchase-status partial">
+                            Partially Received
+                        </span>
+
+                        {% else %}
+
+                        <span class="purchase-status">
+                            {{ order.status }}
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- EXPECTED TOTAL -->
+
+                    <td>
+
+                        KSh {{ "%.2f"|format(
+                            order.expected_total
+                        ) }}
+
+                    </td>
+
+
+                    <!-- ACTION -->
+
+                    <td>
+
+                        <a
+                            href="{{ url_for(
+                                'purchase_details',
+                                purchase_id=order.id
+                            ) }}"
+                            class="view-purchase-button"
+                        >
+                            View
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- =====================================
+         EMPTY STATE
+    ====================================== -->
+
+    <div class="no-purchases-message">
+
+        <div class="no-purchases-icon">
+            📋
+        </div>
+
+        <h3>
+            No Purchase Orders Yet
+        </h3>
+
+        <p>
+            Create your first purchase order to start
+            managing supplier orders and stock receiving.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

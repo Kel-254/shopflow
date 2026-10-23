@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Sale #{{ sale.id }}
+{% endblock %}
+
+{% block content %}
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Sale #{{ sale.id }}</h1>
+
+        <p>
+            View complete transaction details.
+        </p>
+    </div>
+
+    <div class="user-profile">
+
+        <strong>
+            {{ current_user.owner_name }}
+        </strong>
+
+        <span>
+            {{ current_user.role }}
+        </span>
+
+    </div>
+
+</header>
+
+
+<section class="sale-details-card">
+
+    <!-- SALE HEADER -->
+
+    <div class="sale-details-header">
+
+        <div class="receipt-shop-info">
+
+            <h2>
+                {{ current_user.shop.name }}
+            </h2>
+
+            <span>
+                SALES RECEIPT
+            </span>
+
+            <p>
+                {{ current_user.shop.address or "Shop address not provided"}}
+            </p>
+
+            <p>
+                Tel: {{ current_user.shop.phone or "Phone not provided"}}
+            </p>
+
+            <p>
+                Receipt No: #{{ "%05d" | format(sale.id)}}
+            </P>
+
+            <p>
+                Cashier: {{ current_user.owner_name }}
+            </p>
+
+        </div>
+
+
+        <div class="sale-date">
+
+            <span>
+                Date & Time
+            </span>
+
+            <strong>
+                {{ format_eat(sale.created_at) }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- PRODUCTS -->
+
+    <div class="sale-items-wrapper">
+
+        <table class="sale-details-table">
+
+            <thead>
+
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for item in sale.items %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ item.quantity }}
+                    </td>
+
+                    <td>
+                        KSh {{ "%.2f"|format(item.selling_price) }}
+                    </td>
+
+                    <td class="sale-details-total">
+                        KSh {{ "%.2f"|format(item.total_price) }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- TOTAL -->
+
+    <div class="sale-grand-total">
+
+        <span>
+            TOTAL
+        </span>
+
+        <strong>
+            KSh {{ "%.2f"|format(sale.total_amount) }}
+        </strong>
+
+    </div>
+
+    
+    <!-- PAYMENT DETAILS -->
+
+    <div class="sale-payment-details">
+
+        <h3>Payment Details</h3>
+
+        <div class="sale-payment-row">
+            <span>Payment Method</span>
+            <strong>{{ sale.payment_method }}</strong>
+        </div>
+
+        <div class="sale-payment-row">
+            <span>Payment Status</span>
+
+            <strong class="payment-status-badge
+                {% if sale.payment_status == 'Paid' %}payment-status-paid
+                {% elif sale.payment_status == 'Pending' %}payment-status-pending
+                {% else %}payment-status-failed{% endif %}">
+                {{ sale.payment_status }}
+            </strong>
+        </div>
+
+        <div class="sale-payment-row">
+            <span>Sale Total</span>
+            <strong>
+                KSh {{ "%.2f"|format(sale.total_amount) }}
+            </strong>
+        </div>
+
+        <div class="sale-payment-row">
+            <span>Amount Paid</span>
+            <strong>
+                KSh {{ "%.2f"|format(sale.amount_paid or 0) }}
+            </strong>
+        </div>
+
+        <div class="sale-payment-row">
+            <span>Balance</span>
+            <strong>
+                KSh {{ "%.2f"|format(
+                    [sale.total_amount - (sale.amount_paid or 0), 0]|max
+                ) }}
+            </strong>
+        </div>
+
+        {% if sale.payment_reference %}
+        <div class="sale-payment-row">
+            <span>Transaction Reference</span>
+            <strong>{{ sale.payment_reference }}</strong>
+        </div>
+        {% endif %}
+
+        {% if sale.payment_method == "Bank"
+              and sale.payment_status == "Pending" %}
+
+             <div class="bank-confirmation-panel">
+
+                  <h3>Confirm Bank Transfer</h3>
+
+                  <p>
+                     Check your shop's bank account and confirm that
+                     the money has arrived before marking this sale as paid.
+                 </p>
+
+                 <form
+                     method="POST"
+                     action="{{ url_for(
+                         'confirm_bank_payment',
+                         sale_id=sale.id
+                     ) }}"
+                 >   
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <label for="payment_reference">
+                        Bank Transaction Reference
+                    </label>
+
+                    <input
+                        type="text"
+                        id="payment_reference"
+                        name="payment_reference"
+                        placeholder="Enter bank transaction reference"
+                        maxlength="100"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        onclick="return confirm(
+                            'Have you verified that the bank transfer has arrived?'
+                        );"
+                    >
+                        Confirm Bank Payment
+                    </button>
+
+                 </form>
+
+             </div>
+
+            {% endif %}
+
+    </div>
+
+
+    <!-- ACTIONS -->
+
+    <div class="sale-details-actions">
+
+        <a
+            href="{{ url_for('sales_history') }}"
+            class="secondary-button"
+        >
+            ← Back to Sales History
+        </a>
+
+        <button
+            type="button"
+            class="primary-button"
+            onclick="window.print()"
+        >
+            🖨️ Print Sale
+        </button>
+
+    </div>
+
+<!-- RECEIPT FOOTER -->
+
+<div class="receipt-footer">
+
+    <strong>
+        Thank you for shopping with us!
+    </strong>
+
+    <span>
+        We appreciate your business.
+    </span>
+
+</div>
+
+</section>
+
+{% endblock %}

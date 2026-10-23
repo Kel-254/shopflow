@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Suppliers
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================
+     PAGE BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+        Dashboard
+    </a>
+
+    <span>/</span>
+
+    <span>
+        Purchasing
+    </span>
+
+    <span>/</span>
+
+    <strong>
+        Suppliers
+    </strong>
+
+</div>
+
+
+<!-- =========================================
+     PAGE HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Suppliers</h1>
+
+        <p>
+            Manage your shop suppliers and supplier information.
+        </p>
+    </div>
+
+    <a
+        href="{{ url_for('add_supplier') }}"
+        class="primary-button"
+    >
+        + Add Supplier
+    </a>
+
+</header>
+
+
+<!-- =========================================
+     SUPPLIER DIRECTORY
+========================================= -->
+
+<section class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+            <h3>Supplier Directory</h3>
+
+            <p>
+                Your registered suppliers
+            </p>
+        </div>
+
+        <span>
+            {{ suppliers|length }}
+            Supplier{% if suppliers|length != 1 %}s{% endif %}
+        </span>
+
+    </div>
+
+
+    <!-- =====================================
+         SUPPLIER SEARCH
+    ====================================== -->
+
+    <div class="supplier-search-wrapper">
+
+        <div class="supplier-search-icon">
+            🔍
+        </div>
+
+        <input
+            type="text"
+            id="supplierSearch"
+            class="supplier-search"
+            placeholder="Search suppliers by name, phone, email or KRA PIN..."
+            autocomplete="off"
+        >
+
+    </div>
+
+
+    {% if suppliers %}
+
+    <!-- =====================================
+         SUPPLIERS GRID
+    ====================================== -->
+
+    <div class="suppliers-grid">
+
+        {% for supplier in suppliers %}
+
+        <a
+            href="{{ url_for(
+                'supplier_details',
+                supplier_id=supplier.id
+            ) }}"
+            class="supplier-card supplier-card-link"
+            data-supplier-search="
+                {{ supplier.name }}
+                {{ supplier.phone or '' }}
+                {{ supplier.email or '' }}
+                {{ supplier.kra_pin or '' }}
+            "
+        >
+
+            <!-- SUPPLIER CARD TOP -->
+
+            <div class="supplier-card-top">
+
+                <div class="supplier-icon">
+                    🚚
+                </div>
+
+                <div>
+
+                    <h3>
+                        {{ supplier.name }}
+                    </h3>
+
+                    <div
+                        class="supplier-status
+                        {% if supplier.status == 'Active' %}
+                            supplier-status-active
+                        {% else %}
+                            supplier-status-inactive
+                        {% endif %}
+                        "
+                    >
+
+                        {% if supplier.status == 'Active' %}
+
+                            🟢 Active
+
+                        {% else %}
+
+                            ⚪ Inactive
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% if supplier.kra_pin %}
+
+                    <span>
+                        KRA PIN: {{ supplier.kra_pin }}
+                    </span>
+
+                {% else %}
+
+                    <span>
+                        KRA PIN not provided
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- SUPPLIER DETAILS -->
+
+            <div class="supplier-details">
+
+                {% if supplier.phone %}
+
+                <div class="supplier-detail">
+
+                    <span>📞</span>
+
+                    <span>
+                        {{ supplier.phone }}
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if supplier.email %}
+
+                <div class="supplier-detail">
+
+                    <span>✉️</span>
+
+                    <span>
+                        {{ supplier.email }}
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if supplier.address %}
+
+                <div class="supplier-detail">
+
+                    <span>📍</span>
+
+                    <span>
+                        {{ supplier.address }}
+                    </span>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- SUPPLIER NOTES -->
+
+            {% if supplier.notes %}
+
+            <div class="supplier-notes">
+
+                <strong>
+                    Notes
+                </strong>
+
+                <p>
+                    {{ supplier.notes }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- VIEW INDICATOR -->
+
+            <div class="supplier-card-footer">
+
+                <span>
+                    View Supplier Details
+                </span>
+
+                <span class="supplier-card-arrow">
+                    →
+                </span>
+
+            </div>
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- =====================================
+         NO SEARCH RESULTS
+    ====================================== -->
+
+    <div
+        id="noSupplierResults"
+        class="no-supplier-results"
+        style="display: none;"
+    >
+
+        <div class="no-supplier-results-icon">
+            🔍
+        </div>
+
+        <h3>
+            No Suppliers Found
+        </h3>
+
+        <p>
+            Try searching with a different name,
+            phone number, email, or KRA PIN.
+        </p>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- =====================================
+         NO SUPPLIERS
+    ====================================== -->
+
+    <div class="no-suppliers-message">
+
+        <div class="no-suppliers-icon">
+            🚚
+        </div>
+
+        <h3>
+            No Suppliers Yet
+        </h3>
+
+        <p>
+            Add your first supplier using the
+            <strong>+ Add Supplier</strong>
+            button above.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+
+<!-- =========================================
+     SUPPLIER SEARCH JAVASCRIPT
+========================================= -->
+
+<script>
+
+const supplierSearch =
+    document.getElementById(
+        "supplierSearch"
+    );
+
+
+const supplierCards =
+    document.querySelectorAll(
+        ".supplier-card-link"
+    );
+
+
+const noSupplierResults =
+    document.getElementById(
+        "noSupplierResults"
+    );
+
+
+if (supplierSearch) {
+
+    supplierSearch.addEventListener(
+        "input",
+        function () {
+
+            const searchTerm =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            let visibleSuppliers = 0;
+
+
+            supplierCards.forEach(
+                function (card) {
+
+                    const supplierData =
+                        (
+                            card.dataset.supplierSearch
+                            || ""
+                        ).toLowerCase();
+
+
+                    if (
+                        supplierData.includes(
+                            searchTerm
+                        )
+                    ) {
+
+                        card.style.display = "";
+
+                        visibleSuppliers++;
+
+                    } else {
+
+                        card.style.display = "none";
+
+                    }
+
+                }
+            );
+
+
+            if (
+                noSupplierResults &&
+                searchTerm !== "" &&
+                visibleSuppliers === 0
+            ) {
+
+                noSupplierResults.style.display =
+                    "block";
+
+            } else if (noSupplierResults) {
+
+                noSupplierResults.style.display =
+                    "none";
+
+            }
+
+        }
+    );
+
+}
+
+</script>
+
+{% endblock %}

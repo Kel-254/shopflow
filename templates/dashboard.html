@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Lena MiniMart | Dashboard
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- TOP BAR -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Dashboard
+        </h1>
+
+        <p>
+            Welcome back, {{ current_user.owner_name }}.
+        </p>
+
+    </div>
+
+
+    <div class="user-profile">
+
+        <div class="user-avatar">
+
+            {{ current_user.owner_name[0] | upper }}
+
+        </div>
+
+
+        <div>
+
+            <strong>
+                {{ current_user.owner_name }}
+            </strong>
+
+            <span>
+                {{ current_user.role | capitalize }}
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- SHOP INFORMATION -->
+
+<section class="shop-banner">
+
+    <div class="banner-content">
+
+        <span class="small-label">
+            CURRENT SHOP
+        </span>
+
+
+        <h2>
+            {{ current_user.shop.name }}
+        </h2>
+
+
+        <p>
+            {{ current_user.shop.address or "Shop location not provided" }}
+        </p>
+
+
+        <div class="banner-info">
+
+            <span>🛍️</span>
+
+            <span>
+                Shop Management System
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- 3D FLOATING SHOP -->
+
+    <div class="floating-shop">
+
+        <div class="shop-3d">
+
+            <div class="shop-roof"></div>
+
+
+            <div class="shop-building">
+
+                <div class="shop-sign">
+                    LENA
+                </div>
+
+
+                <div class="shop-window">
+                    🛒
+                </div>
+
+
+                <div class="shop-door"></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="floating-shadow"></div>
+
+    </div>
+
+
+    <!-- SYSTEM STATUS -->
+
+    <div class="shop-status">
+
+        <span class="status-dot"></span>
+
+        <span>
+            System Active
+        </span>
+
+    </div>
+
+</section>
+
+
+<!-- 3D STAT CARDS -->
+
+<section class="stats-grid">
+
+
+    <!-- TODAY'S SALES -->
+
+    <div class="stat-card stat-sales">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                💰
+            </div>
+
+
+            <span class="stat-label">
+                TODAY
+            </span>
+
+        </div>
+
+
+        <div class="stat-content">
+
+            <span>
+                Today's Sales
+            </span>
+
+
+            <h2>
+                KSh {{ "%.2f" | format(todays_revenue) }}
+            </h2>
+
+
+            <div class="stat-progress">
+
+                <span style="width: 65%;"></span>
+
+            </div>
+
+
+            <small>
+                Sales revenue today
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- SALES COUNT -->
+
+    <div class="stat-card stat-orders">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                🛒
+            </div>
+
+
+            <span class="stat-label">
+                SALES
+            </span>
+
+        </div>
+
+
+        <div class="stat-content">
+
+            <span>
+                Sales Today
+            </span>
+
+
+            <h2>
+                {{ sales_today }}
+            </h2>
+
+
+            <div class="stat-progress">
+
+                <span style="width: 45%;"></span>
+
+            </div>
+
+
+            <small>
+                Transactions recorded
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- PRODUCTS -->
+
+    <div class="stat-card stat-products">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                📦
+            </div>
+
+
+            <span class="stat-label">
+                INVENTORY
+            </span>
+
+        </div>
+
+
+        <div class="stat-content">
+
+            <span>
+                Total Products
+            </span>
+
+
+            <h2>
+                {{ total_products }}
+            </h2>
+
+
+            <div class="stat-progress">
+
+                <span style="width: 75%;"></span>
+
+            </div>
+
+
+            <small>
+                Products in inventory
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- LOW STOCK -->
+
+    <div class="stat-card stat-warning">
+
+        <div class="stat-top">
+
+            <div class="stat-icon">
+                ⚠️
+            </div>
+
+
+            <span class="stat-label">
+                ALERT
+            </span>
+
+        </div>
+
+
+        <div class="stat-content">
+
+            <span>
+                Low Stock
+            </span>
+
+
+            <h2>
+                {{ low_stock }}
+            </h2>
+
+
+            <div class="stat-progress">
+
+                <span style="width: 20%;"></span>
+
+            </div>
+
+
+            <small>
+                Products need attention
+            </small>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- DASHBOARD GRID -->
+
+<section class="dashboard-grid">
+
+
+    <!-- RECENT SALES -->
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    Recent Sales
+                </h3>
+
+                <p>
+                    Your latest transactions
+                </p>
+
+            </div>
+
+
+            <a href="{{ url_for('sales_history') }}">
+                View All
+            </a>
+
+        </div>
+
+
+        {% if recent_sales %}
+
+        <div class="recent-sales-list">
+
+            {% for sale in recent_sales %}
+
+            <div class="recent-sale-item">
+
+
+                <div class="recent-sale-icon">
+                    🛒
+                </div>
+
+
+                <div class="recent-sale-info">
+
+                    <strong>
+                        Sale #{{ "%05d" | format(sale.id) }}
+                    </strong>
+
+                    <span>
+                        {{ format_eat(sale.created_at) }}
+                    </span>
+
+                </div>
+
+
+                <div class="recent-sale-amount">
+
+                    KSh {{ "%.2f" | format(sale.total_amount) }}
+
+                </div>
+
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                🛒
+            </div>
+
+
+            <h4>
+                No sales yet
+            </h4>
+
+
+            <p>
+                Your recent sales will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- LOW STOCK PRODUCTS -->
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    Low Stock Products
+                </h3>
+
+                <p>
+                    Products that need restocking
+                </p>
+
+            </div>
+
+
+            <a href="{{ url_for('products') }}">
+                View All
+            </a>
+
+        </div>
+
+
+        {% if low_stock > 0 %}
+
+        <div class="low-stock-dashboard-list">
+
+            {% for product in products if product.quantity <= product.low_stock_level %}
+
+            <div class="low-stock-dashboard-item">
+
+                <div class="low-stock-product-icon">
+                    📦
+                </div>
+
+
+                <div class="low-stock-product-info">
+
+                    <strong>
+                        {{ product.name }}
+                    </strong>
+
+                    <span>
+                        {{ product.quantity }} left
+                    </span>
+
+                </div>
+
+
+                <div class="low-stock-warning">
+                    Low Stock
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                📦
+            </div>
+
+
+            <h4>
+                No low-stock products
+            </h4>
+
+
+            <p>
+                Your stock alerts will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+</section>
+
+
+{% endblock %}

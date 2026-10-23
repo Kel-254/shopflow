@@ -1,0 +1,901 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Create Purchase Order
+{% endblock %}
+
+{% block content %}
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Create Purchase Order</h1>
+        <p>Create a new order for your supplier.</p>
+    </div>
+
+    <a href="{{ url_for('purchases') }}" class="secondary-button">
+        ← Back to Purchases
+    </a>
+
+</header>
+
+
+<section class="dashboard-card purchase-order-form-card">
+
+    <div class="card-header">
+
+        <div>
+            <h3>Order Information</h3>
+            <p>Enter the supplier and products you want to order.</p>
+        </div>
+
+    </div>
+
+
+    <form method="POST" id="purchaseOrderForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- ORDER INFORMATION -->
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label for="order_number">
+                    Order Number <span>*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="order_number"
+                    name="order_number"
+                    placeholder="e.g. PO-00001"
+                    required
+                >
+
+            </div>
+
+            <div class ="form-group">
+                <label for="order_date">
+                    Order Date 
+                   <span>*</span>
+                </label>
+
+                <input 
+                    type="date"
+                    id="order_date"
+                    name="order_date"
+                    required
+                >
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="supplier_id">
+                    Supplier <span>*</span>
+                </label>
+
+                <select
+                    id="supplier_id"
+                    name="supplier_id"
+                    required
+                >
+
+                    <option value="">
+                        Select supplier
+                    </option>
+
+                    {% for supplier in suppliers %}
+
+                    <option
+                        value="{{ supplier.id }}"
+                        data-name="{{ supplier.name }}"
+                        data-phone="{{ supplier.phone or '' }}"
+                        data-email="{{ supplier.email or '' }}"
+                        data-address="{{ supplier.address or '' }}"
+                        data-kra="{{ supplier.kra_pin or '' }}"
+                    >
+                        {{ supplier.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+            <!-- SUPPLIER DETAILS PREVIEW -->
+            <div
+                 id="dupplierPreview"
+                 class="supplier-preview"
+                 style="display: none;"
+            >    
+                <div class="supplier-preview-header">
+                    <div class="supplier-preview-icon">
+                         🚚
+                    </div>
+                    <div>
+                        <span>SUPPLIER DETAILS</span>
+                        <h3 id="previewSupplierName">
+                            Supplier Name
+                        </h3>
+                    </div>
+                </div>
+                <div class="supplier detail">
+                    <span class="supplier-detail-icon">📞</span>
+                    <div>
+                        <small>Phone</small>
+                        <strong id="previewSupplierPhone">
+                            Not provided
+                        </strong>
+                    </div>
+                </div>
+                <div class="supplier-detail">
+                    <span class="suppler-detail-icon">✉️</span>
+                    <div>
+                        <small>Email</small>
+                        <strong id="previewSupplierEmail">
+                            Not provided
+                        </strong>
+                    </div>
+
+                </div>
+                <div class="supplier-detail">
+                    <span class="supplier-detail-icon">📍</span>
+                    <div>
+                        <small>Address</small>
+                        <strong id="previewSupplierAddress">
+                            Not provided
+                        </strong>
+                    </div>
+                </div>
+                <div class="supplier-detail">
+                    <span class="supplier-detail-icon">🧾</span>
+                    <div>
+                        <small>KRA PIN</small>
+                        <strong id="previewSupplierKra">
+                            Not provided
+                        </strong>
+                    </div>
+                </div>
+                
+            </div>
+               
+
+        </div>
+
+
+        <!-- PRODUCTS -->
+
+        <div class="purchase-items-section">
+
+            <div class="purchase-items-header">
+
+                <div>
+                    <h3>Products to Order</h3>
+                    <p>Add the products and quantities you want from the supplier.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="addPurchaseItem()"
+                >
+                    + Add Product
+                </button>
+
+            </div>
+
+
+            <div id="purchaseItems">
+
+                <div class="purchase-item">
+
+                    <div class="form-group">
+
+                        <label>
+                            Product <span>*</span>
+                        </label>
+
+                        <select
+                            name="product_id[]"
+                            required
+                        >
+
+                            <option value="">
+                                Select product
+                            </option>
+
+                            {% for product in products %}
+
+                            <option value="{{ product.id }}">
+                                {{ product.name }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Quantity <span>*</span>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="quantity[]"
+                            min="1"
+                            placeholder="0"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Expected Buying Price <span>*</span>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="buying_price[]"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Total
+                        </label>
+
+                        <div class="purchase-item-total">
+                            KSh 0.00
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="remove-purchase-item"
+                        onclick="removePurchaseItem(this)"
+                        title="Remove product"
+                    >
+                        ✕
+                    </button>
+
+                </div>
+             </div>
+        </div>
+
+
+        <!-- ORDER TOTAL -->
+
+        <div class="purchase-order-total">
+
+            <span>
+                Expected Order Total
+            </span>
+
+            <strong id="orderTotal">
+                KSh 0.00
+            </strong>
+
+        </div>
+
+
+        <!-- NOTES -->
+
+        <div class="form-group form-group-full">
+
+            <label for="notes">
+                Notes
+            </label>
+
+            <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                placeholder="Add notes about this purchase order..."
+            ></textarea>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('purchases') }}"
+                class="secondary-button"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Create Purchase Order
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+
+<script>
+
+// =========================================
+// PURCHASE ORDER ITEMS
+// =========================================
+
+
+function addPurchaseItem() {
+
+    const container =
+        document.getElementById("purchaseItems");
+
+    const firstItem =
+        container.querySelector(".purchase-item");
+
+    const newItem =
+        firstItem.cloneNode(true);
+
+
+    // -----------------------------------------
+    // CLEAR INPUTS
+    // -----------------------------------------
+
+    newItem.querySelectorAll("input").forEach(
+        input => {
+            input.value = "";
+        }
+    );
+
+
+    // -----------------------------------------
+    // RESET SELECTS
+    // -----------------------------------------
+
+    newItem.querySelectorAll("select").forEach(
+        select => {
+            select.selectedIndex = 0;
+        }
+    );
+
+
+    // -----------------------------------------
+    // RESET ITEM TOTAL
+    // -----------------------------------------
+
+    newItem.querySelector(
+        ".purchase-item-total"
+    ).textContent =
+        "KSh 0.00";
+
+
+    // Add new row
+    container.appendChild(newItem);
+
+
+    // Attach calculations
+    attachPurchaseCalculations(newItem);
+
+
+    // Update remove buttons
+    updateRemoveButtons();
+
+
+    // Update product dropdowns
+    updateProductOptions();
+
+
+    // Recalculate order total
+    calculateOrderTotal();
+
+}
+
+
+// =========================================
+// REMOVE PURCHASE ITEM
+// =========================================
+
+
+function removePurchaseItem(button) {
+
+    const container =
+        document.getElementById("purchaseItems");
+
+    const items =
+        container.querySelectorAll(".purchase-item");
+
+
+    if (items.length === 1) {
+
+        alert(
+            "At least one product is required."
+        );
+
+        return;
+    }
+
+
+    button
+        .closest(".purchase-item")
+        .remove();
+
+
+    // Product becomes available again
+    updateProductOptions();
+
+
+    // Update remove buttons
+    updateRemoveButtons();
+
+
+    // Recalculate order total
+    calculateOrderTotal();
+
+}
+
+
+// =========================================
+// UPDATE REMOVE BUTTONS
+// =========================================
+
+
+function updateRemoveButtons() {
+
+    const items =
+        document.querySelectorAll(
+            ".purchase-item"
+        );
+
+
+    items.forEach(item => {
+
+        const button =
+            item.querySelector(
+                ".remove-purchase-item"
+            );
+
+
+        if (button) {
+
+            button.style.display = "flex";
+
+        }
+
+    });
+
+}
+
+
+// =========================================
+// PREVENT DUPLICATE PRODUCTS
+// =========================================
+
+
+function updateProductOptions() {
+
+    const items =
+        document.querySelectorAll(
+            ".purchase-item"
+        );
+
+
+    const selectedProducts = [];
+
+
+    // -----------------------------------------
+    // FIND SELECTED PRODUCTS
+    // -----------------------------------------
+
+    items.forEach(item => {
+
+        const select =
+            item.querySelector(
+                'select[name="product_id[]"]'
+            );
+
+
+        if (
+            select &&
+            select.value
+        ) {
+
+            selectedProducts.push(
+                select.value
+            );
+
+        }
+
+    });
+
+
+    // -----------------------------------------
+    // DISABLE DUPLICATE PRODUCTS
+    // -----------------------------------------
+
+    items.forEach(item => {
+
+        const select =
+            item.querySelector(
+                'select[name="product_id[]"]'
+            );
+
+
+        if (!select) {
+            return;
+        }
+
+
+        const currentValue =
+            select.value;
+
+
+        Array.from(
+            select.options
+        ).forEach(option => {
+
+
+            // Keep placeholder available
+            if (!option.value) {
+
+                option.disabled = false;
+
+                return;
+            }
+
+
+            // Keep the product selected
+            // in this row available
+
+            if (
+                option.value ===
+                currentValue
+            ) {
+
+                option.disabled = false;
+
+            } else {
+
+                option.disabled =
+                    selectedProducts.includes(
+                        option.value
+                    );
+
+            }
+
+        });
+
+    });
+
+}
+
+
+// =========================================
+// PURCHASE CALCULATIONS
+// =========================================
+
+
+function attachPurchaseCalculations(item) {
+
+    const quantityInput =
+        item.querySelector(
+            'input[name="quantity[]"]'
+        );
+
+
+    const priceInput =
+        item.querySelector(
+            'input[name="buying_price[]"]'
+        );
+
+
+    const productSelect =
+        item.querySelector(
+            'select[name="product_id[]"]'
+        );
+
+
+    // -----------------------------------------
+    // CALCULATE ITEM TOTAL
+    // -----------------------------------------
+
+    function calculateItem() {
+
+        const quantity =
+            parseFloat(
+                quantityInput.value
+            ) || 0;
+
+
+        const price =
+            parseFloat(
+                priceInput.value
+            ) || 0;
+
+
+        const total =
+            quantity * price;
+
+
+        item.querySelector(
+            ".purchase-item-total"
+        ).textContent =
+            "KSh " +
+            total.toFixed(2);
+
+
+        calculateOrderTotal();
+
+    }
+
+
+    // Quantity calculation
+    quantityInput.addEventListener(
+        "input",
+        calculateItem
+    );
+
+
+    // Buying price calculation
+    priceInput.addEventListener(
+        "input",
+        calculateItem
+    );
+
+
+    // -----------------------------------------
+    // PRODUCT SELECTION
+    // -----------------------------------------
+
+    if (productSelect) {
+
+        productSelect.addEventListener(
+            "change",
+            function () {
+
+                updateProductOptions();
+
+            }
+        );
+
+    }
+
+}
+
+
+// =========================================
+// CALCULATE ORDER TOTAL
+// =========================================
+
+
+function calculateOrderTotal() {
+
+    let total = 0;
+
+
+    document.querySelectorAll(
+        ".purchase-item"
+    ).forEach(item => {
+
+
+        const quantity =
+            parseFloat(
+                item.querySelector(
+                    'input[name="quantity[]"]'
+                ).value
+            ) || 0;
+
+
+        const price =
+            parseFloat(
+                item.querySelector(
+                    'input[name="buying_price[]"]'
+                ).value
+            ) || 0;
+
+
+        total +=
+            quantity * price;
+
+    });
+
+
+    document.getElementById(
+        "orderTotal"
+    ).textContent =
+        "KSh " +
+        total.toFixed(2);
+
+}
+
+
+// =========================================
+// INITIALIZE PURCHASE ITEMS
+// =========================================
+
+
+document.querySelectorAll(
+    ".purchase-item"
+).forEach(item => {
+
+    attachPurchaseCalculations(item);
+
+});
+
+
+updateRemoveButtons();
+
+
+// Initialize duplicate prevention
+updateProductOptions();
+
+
+// =========================================
+// SUPPLIER DETAILS PREVIEW
+// =========================================
+
+
+const supplierSelect =
+    document.getElementById(
+        "supplier_id"
+    );
+
+
+const supplierPreview =
+    document.getElementById(
+        "supplierPreview"
+    );
+
+
+const previewSupplierName =
+    document.getElementById(
+        "previewSupplierName"
+    );
+
+
+const previewSupplierPhone =
+    document.getElementById(
+        "previewSupplierPhone"
+    );
+
+
+const previewSupplierEmail =
+    document.getElementById(
+        "previewSupplierEmail"
+    );
+
+
+const previewSupplierAddress =
+    document.getElementById(
+        "previewSupplierAddress"
+    );
+
+
+const previewSupplierKra =
+    document.getElementById(
+        "previewSupplierKra"
+    );
+
+
+// =========================================
+// SUPPLIER PREVIEW
+// =========================================
+
+
+if (supplierSelect) {
+
+    supplierSelect.addEventListener(
+        "change",
+        function () {
+
+
+            const selectedOption =
+                this.options[
+                    this.selectedIndex
+                ];
+
+
+            // ---------------------------------
+            // NO SUPPLIER SELECTED
+            // ---------------------------------
+
+            if (!this.value) {
+
+                if (supplierPreview) {
+
+                    supplierPreview.style.display =
+                        "none";
+
+                }
+
+                return;
+            }
+
+
+            // ---------------------------------
+            // SUPPLIER INFORMATION
+            // ---------------------------------
+
+            if (previewSupplierName) {
+
+                previewSupplierName.textContent =
+                    selectedOption.dataset.name ||
+                    "Supplier";
+
+            }
+
+
+            if (previewSupplierPhone) {
+
+                previewSupplierPhone.textContent =
+                    selectedOption.dataset.phone ||
+                    "Not provided";
+
+            }
+
+
+            if (previewSupplierEmail) {
+
+                previewSupplierEmail.textContent =
+                    selectedOption.dataset.email ||
+                    "Not provided";
+
+            }
+
+
+            if (previewSupplierAddress) {
+
+                previewSupplierAddress.textContent =
+                    selectedOption.dataset.address ||
+                    "Not provided";
+
+            }
+
+
+            if (previewSupplierKra) {
+
+                previewSupplierKra.textContent =
+                    selectedOption.dataset.kra ||
+                    "Not provided";
+
+            }
+
+
+            // ---------------------------------
+            // SHOW PREVIEW
+            // ---------------------------------
+
+            if (supplierPreview) {
+
+                supplierPreview.style.display =
+                    "block";
+
+            }
+
+        }
+    );
+
+}
+
+</script>
+
+{% endblock %}

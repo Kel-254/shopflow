@@ -1,0 +1,652 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Lena MiniMart | Sales
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- HEADER -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Sales
+        </h1>
+
+        <p>
+            Record and manage your shop sales
+        </p>
+
+    </div>
+
+
+    <div class="user-profile">
+
+        <div class="user-avatar">
+
+            {{ current_user.owner_name[0]|upper }}
+
+        </div>
+
+
+        <div>
+
+            <strong>
+                {{ current_user.owner_name }}
+            </strong>
+
+            <span>
+                {{ current_user.role|capitalize }}
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- SHOP BANNER -->
+
+<section class="shop-banner">
+
+    <div>
+
+        <span>
+            Current Shop
+        </span>
+
+
+        <h2>
+            {{ current_user.shop.name }}
+        </h2>
+
+
+        <p>
+            {{ current_user.shop.address }}
+        </p>
+
+    </div>
+
+
+    <div class="shop-banner-icon">
+
+        🛒
+
+    </div>
+
+</section>
+
+
+<!-- SALES AREA -->
+
+<section class="sales-container">
+
+    <div class="dashboard-card sales-card">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    New Sale
+                </h2>
+
+                <p>
+                    Select products and record a sale
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCT SEARCH -->
+
+        <div class="sales-search">
+
+            <label for="product-search">
+                Search Product
+            </label>
+
+
+            <input
+                type="text"
+                id="product-search"
+                placeholder="Search product name..."
+            >
+
+        </div>
+
+
+        <!-- SALE FORM -->
+
+        <div class="sale-form">
+
+
+            <!-- PRODUCT -->
+
+            <div class="form-group">
+
+                <label for="product">
+                    Product
+                </label>
+
+
+                <select
+                    id="product"
+                    name="product_id"
+                >
+
+                    <option value="">
+                        Select a product
+                    </option>
+
+
+                    {% for product in products %}
+
+                        <option
+                            value="{{ product.id }}"
+                            data-price="{{ product.selling_price }}"
+                            data-stock="{{ product.quantity }}"
+                        >
+
+                            {{ product.name }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- SELLING PRICE -->
+
+            <div class="form-group">
+
+                <label for="selling-price">
+                    Selling Price
+                </label>
+
+
+                <input
+                    type="number"
+                    id="selling-price"
+                    readonly
+                    placeholder="0.00"
+                >
+
+            </div>
+
+
+            <!-- AVAILABLE QUANTITY -->
+
+            <div class="form-group">
+
+                <label for="available-quantity">
+                    Available Quantity
+                </label>
+
+
+                <input
+                    type="number"
+                    id="available-quantity"
+                    readonly
+                    placeholder="0"
+                >
+
+            </div>
+
+
+            <!-- QUANTITY SOLD -->
+
+            <div class="form-group">
+
+                <label for="quantity-sold">
+                    Quantity Sold
+                </label>
+
+
+                <input
+                    type="number"
+                    id="quantity-sold"
+                    min="1"
+                    placeholder="Enter quantity"
+                >
+
+            </div>
+
+
+        </div>
+
+
+        <!-- TOTAL -->
+
+        <div class="sale-total">
+
+            <span>
+                Total Sale
+            </span>
+
+
+            <strong>
+                KSh 0.00
+            </strong>
+
+        </div>
+
+
+        <!-- COMPLETE SALE -->
+
+        <div class="sale-actions">
+
+            <form
+                action="{{ url_for('complete_sale') }}"
+                method="POST"
+                id="complete-sale-form"
+            >   
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <input
+                    type="hidden"
+                    name="product_id"
+                    id="sale-product-id"
+                >
+
+
+                <input
+                    type="hidden"
+                    name="quantity"
+                    id="sale-quantity"
+                >
+
+                
+                <label for="payment_method" class="payment-method-label">
+                    Payment Method
+                </label>
+
+                <select
+                    name="payment_method"
+                    id="payment_method"
+                    class="payment-method-select"
+                    required
+                >
+                   <option value="Cash" selected>Cash</option>
+                   <option value="M-Pesa">M-Pesa</option>
+                   <option value="Bank">Bank</option>
+                </select>
+
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="complete-sale-button"
+                >
+
+                    Complete Sale
+
+                </button>
+
+            </form>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+<!-- PAYMENT LOADING OVERLAY -->
+
+<div
+    id="payment-loading-overlay"
+    class="payment-loading-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="payment-loading-title"
+    aria-describedby="payment-loading-message"
+    aria-hidden="true"
+    hidden
+>
+    <div class="payment-loading-card">
+
+        <div class="payment-loader">
+            <div class="payment-spinner"></div>
+        </div>
+
+        <span class="payment-loading-tag">
+            LENA MINIMART
+        </span>
+
+        <h2 id="payment-loading-title">
+            Processing Sale
+        </h2>
+
+        <p id="payment-loading-message">
+            Please wait while we submit your sale.
+        </p>
+
+        <div class="payment-loading-summary">
+
+            <div>
+                <span>Amount</span>
+                <strong id="loading-payment-amount">
+                    KSh 0.00
+                </strong>
+            </div>
+
+            <div>
+                <span>Payment method</span>
+                <strong id="loading-payment-method">
+                    Cash
+                </strong>
+            </div>
+
+        </div>
+
+        <div class="payment-loading-status">
+            <span class="status-pulse"></span>
+            Please do not submit again
+        </div>
+
+    </div>
+</div>
+
+
+<!-- SALES JAVASCRIPT -->
+
+<script>
+
+    const productSelect =
+        document.getElementById("product");
+
+
+    const sellingPrice =
+        document.getElementById("selling-price");
+
+
+    const availableQuantity =
+        document.getElementById("available-quantity");
+
+
+    const quantitySold =
+        document.getElementById("quantity-sold");
+
+
+    const totalSale =
+        document.querySelector(".sale-total strong");
+
+
+    const saleProductId =
+        document.getElementById("sale-product-id");
+
+
+    const saleQuantity =
+        document.getElementById("sale-quantity");
+
+
+    /*
+        PRODUCT SELECTION
+    */
+
+    productSelect.addEventListener("change", function () {
+
+        const selectedOption =
+            productSelect.options[
+                productSelect.selectedIndex
+            ];
+
+
+        if (!selectedOption.value) {
+
+            sellingPrice.value = "";
+
+            availableQuantity.value = "";
+
+            quantitySold.value = "";
+
+            saleProductId.value = "";
+
+            saleQuantity.value = "";
+
+            totalSale.textContent =
+                "KSh 0.00";
+
+            return;
+        }
+
+
+        const price =
+            selectedOption.dataset.price;
+
+
+        const stock =
+            selectedOption.dataset.stock;
+
+
+        sellingPrice.value =
+            price;
+
+
+        availableQuantity.value =
+            stock;
+
+
+        quantitySold.value =
+            "";
+
+
+        saleProductId.value =
+            selectedOption.value;
+
+
+        saleQuantity.value =
+            "";
+
+
+        totalSale.textContent =
+            "KSh 0.00";
+
+    });
+
+
+    /*
+        CALCULATE TOTAL SALE
+    */
+
+    quantitySold.addEventListener("input", function () {
+
+        const price =
+            parseFloat(
+                sellingPrice.value
+            ) || 0;
+
+
+        const quantity =
+            parseInt(
+                quantitySold.value
+            ) || 0;
+
+
+        const total =
+            price * quantity;
+
+
+        totalSale.textContent =
+            "KSh " + total.toFixed(2);
+
+
+        saleQuantity.value =
+            quantity;
+
+    });
+
+// FLOATING PAYMENT LOADING CARD
+
+const saleForm = document.getElementById(
+    "complete-sale-form"
+);
+
+const saleButton = document.getElementById(
+    "complete-sale-button"
+);
+
+const loadingOverlay = document.getElementById(
+    "payment-loading-overlay"
+);
+
+const loadingTitle = document.getElementById(
+    "payment-loading-title"
+);
+
+const loadingMessage = document.getElementById(
+    "payment-loading-message"
+);
+
+const loadingAmount = document.getElementById(
+    "loading-payment-amount"
+);
+
+const loadingMethod = document.getElementById(
+    "loading-payment-method"
+);
+
+
+
+let saleSubmissionStarted = false;
+
+saleForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (saleSubmissionStarted) {
+        return;
+    }
+
+    const selectedOption =
+        productSelect.options[productSelect.selectedIndex];
+
+    const quantity = Number(quantitySold.value);
+    const availableStock = Number(
+        selectedOption?.dataset.stock || 0
+    );
+
+    if (
+        !productSelect.value ||
+        !Number.isInteger(quantity) ||
+        quantity <= 0 ||
+        quantity > availableStock
+    ) {
+        alert(
+            "Please select a product and enter a valid quantity within available stock."
+        );
+        return;
+    }
+
+    const paymentMethod =
+        document.getElementById("payment_method").value;
+
+    const amount = Number(sellingPrice.value) * quantity;
+
+    loadingAmount.textContent =
+        "KSh " + amount.toLocaleString("en-KE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+    loadingMethod.textContent = paymentMethod;
+
+    loadingTitle.textContent =
+        paymentMethod === "Cash"
+            ? "Completing Cash Sale"
+            : paymentMethod === "Bank"
+                ? "Submitting Bank Transfer Sale"
+                : "Submitting M-Pesa Sale";
+
+    loadingMessage.textContent =
+        paymentMethod === "Cash"
+            ? "Saving your sale and updating inventory..."
+            : paymentMethod === "Bank"
+                ? "Saving the sale. Bank payment remains pending until verified."
+                : "Submitting your sale. Payment confirmation will follow separately.";
+
+    loadingOverlay.hidden = false;
+    loadingOverlay.setAttribute("aria-hidden", "false");
+
+    saleSubmissionStarted = true;
+    saleButton.disabled = true;
+    saleButton.textContent = "Please wait...";
+
+    try {
+        const response = await fetch(saleForm.action, {
+            method: "POST",
+            body: new FormData(saleForm),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "Accept": "application/json"
+            },
+            credentials: "same-origin"
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(
+                result.message || "The sale could not be saved."
+            );
+        }
+
+        loadingTitle.textContent =
+            result.payment_status === "Paid"
+                ? "Sale Completed!"
+                : "Sale Recorded!";
+
+        loadingMessage.textContent =
+            result.payment_status === "Paid"
+                ? "Your sale has been saved and inventory updated."
+                : "Your sale is recorded. Payment is still pending.";
+
+        loadingOverlay.querySelector(".payment-spinner")
+            .style.animation = "none";
+
+        loadingOverlay.querySelector(".payment-spinner")
+            .style.borderColor = "#13a875";
+
+        loadingOverlay.querySelector(".payment-spinner")
+            .style.borderTopColor = "#13a875";
+
+        loadingOverlay.querySelector(".payment-loading-status")
+            .textContent = "✓ Sale saved successfully";
+
+        // Briefly show success, then open the actual sale details.
+        await new Promise(resolve => setTimeout(resolve, 900));
+
+        window.location.assign(result.sale_url);
+
+    } catch (error) {
+        loadingOverlay.hidden = true;
+        loadingOverlay.setAttribute("aria-hidden", "true");
+
+        saleSubmissionStarted = false;
+        saleButton.disabled = false;
+        saleButton.textContent = "Complete Sale";
+
+        alert(error.message || "Something went wrong. Please try again.");
+    }
+});
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | Lena MiniMart{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <span>/</span>
+    <span class="breadcrumb-current">Settings</span>
+</div>
+
+
+<div class="page-header">
+    <div>
+        <h1>Settings</h1>
+        <p>Manage your shop information and business details.</p>
+    </div>
+</div>
+
+<div class="settings-container">
+    <form method="POST" class="settings-card">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="shop_profile">
+
+        <h2>Shop Profile</h2>
+
+        <p class="settings-description">
+            Keep your shop details accurate and up to date.
+        </p>
+
+        <div class="settings-form-group">
+            <label for="name">Shop Name *</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ shop.name }}"
+                maxlength="150"
+                required
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="phone">Phone Number</label>
+            <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value="{{ shop.phone or '' }}"
+                maxlength="30"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="email">Shop Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ shop.email or '' }}"
+                maxlength="120"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="address">Shop Address</label>
+            <textarea
+                id="address"
+                name="address"
+                rows="3"
+                maxlength="200"
+            >{{ shop.address or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="default_low_stock_level">
+                Default Low-Stock Level
+            </label>
+
+            <input
+                type="number"
+                id="default_low_stock_level"
+                name="default_low_stock_level"
+                min="0"
+                value="{{ shop.default_low_stock_level }}"
+                required
+            >
+
+            <small>
+                Products are flagged as low stock when their quantity
+                reaches this level.
+            </small>
+        </div>
+
+        <button type="submit" class="primary-button">
+            Save Settings
+        </button>
+
+    </form>
+
+    
+    <!-- PAYMENT SETTINGS -->
+    <form
+        method="POST"
+        action="{{ url_for('settings') }}"
+        class="settings-card"
+    >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="form_type" value="payment_settings">
+
+        <h2>Payment Settings</h2>
+
+        <p class="settings-description">
+            Configure the payment methods accepted by your shop.
+            Your customers can use different banks to make transfers.
+        </p>
+
+        <div class="settings-form-group">
+            <label>
+                <input
+                    type="checkbox"
+                    name="accept_bank_transfer"
+                    {% if shop.accept_bank_transfer %}checked{% endif %}
+                >
+                Accept Bank Transfers
+            </label>
+        </div>
+
+        <div class="settings-form-group">
+            <label for="bank_name">Bank Name</label>
+            <input
+                type="text"
+                id="bank_name"
+                name="bank_name"
+                value="{{ shop.bank_name or '' }}"
+                maxlength="100"
+                placeholder="e.g. KCB, Equity, Co-operative"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="bank_account_name">Account Name</label>
+            <input
+                type="text"
+                id="bank_account_name"
+                name="bank_account_name"
+                value="{{ shop.bank_account_name or '' }}"
+                maxlength="150"
+                placeholder="Name registered to the account"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="bank_account_number">Account Number</label>
+            <input
+                type="text"
+                id="bank_account_number"
+                name="bank_account_number"
+                value="{{ shop.bank_account_number or '' }}"
+                maxlength="100"
+                autocomplete="off"
+                placeholder="Enter your bank account number"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="bank_branch">Bank Branch (Optional)</label>
+            <input
+                type="text"
+                id="bank_branch"
+                name="bank_branch"
+                value="{{ shop.bank_branch or '' }}"
+                maxlength="100"
+                placeholder="Branch name"
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="bank_payment_instructions">
+                Payment Instructions (Optional)
+            </label>
+            <textarea
+                id="bank_payment_instructions"
+                name="bank_payment_instructions"
+                rows="3"
+                placeholder="Instructions for customers making transfers"
+            >{{ shop.bank_payment_instructions or '' }}</textarea>
+        </div>
+
+        <div class="settings-form-group">
+            <label>
+                <input
+                    type="checkbox"
+                    name="accept_mpesa"
+                    {% if shop.accept_mpesa %}checked{% endif %}
+                >
+                Accept M-Pesa
+            </label>
+        </div>
+
+        <button type="submit" class="primary-button">
+            Save Payment Settings
+        </button>
+
+    </form>
+
+
+    <!-- OWNER ACCOUNT DETAILS -->
+<div class="settings-card account-settings-card">
+
+    <h2>Owner Account Details</h2>
+
+    <p class="settings-description">
+        Your account information used to access Lena MiniMart.
+    </p>
+
+    <div class="settings-form-group">
+        <label>Owner Name</label>
+        <input
+            type="text"
+            value="{{ current_user.owner_name }}"
+            readonly
+        >
+    </div>
+
+    <div class="settings-form-group">
+        <label>Username</label>
+        <input
+            type="text"
+            value="{{ current_user.username }}"
+            readonly
+        >
+    </div>
+
+    <div class="settings-form-group">
+        <label>Login Email</label>
+        <input
+            type="email"
+            value="{{ current_user.email }}"
+            readonly
+        >
+    </div>
+
+    <p class="settings-description">
+        These details are currently view-only.
+    </p>
+
+</div>
+
+<!-- CHANGE PASSWORD -->
+<div class="settings-card">
+
+    <h2>Change Password</h2>
+
+    <p class="settings-description">
+        Choose a strong password to protect your shop account.
+    </p>
+
+    <form
+        method="POST"
+        action="{{ url_for('change_password') }}"
+    >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="settings-form-group">
+            <label for="current_password">Current Password</label>
+            <input
+                type="password"
+                id="current_password"
+                name="current_password"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="new_password">New Password</label>
+            <input
+                type="password"
+                id="new_password"
+                name="new_password"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+        </div>
+
+        <div class="settings-form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                minlength="8"
+                autocomplete="new-password"
+                required
+            >
+        </div>
+
+        <button type="submit" class="primary-button">
+            Update Password
+        </button>
+
+    </form>
+
+</div>
+</div>
+
+{% endblock %}

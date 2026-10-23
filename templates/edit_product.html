@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lena MiniMart | Edit Product</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="dashboard-page">
+
+        <aside class="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+                    LM
+                </div>
+
+                <div>
+                    <h2>LENA MINIMART</h2>
+                    <span>SHOP MANAGEMENT</span>
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <a href="{{ url_for('dashboard') }}"
+                   class="nav-item">
+                    🏠 Dashboard
+                </a>
+
+                <a href="{{ url_for('products') }}"
+                   class="nav-item active">
+                    📦 Products & Stock
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    🛒 Sales
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    🚚 Suppliers
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    📥 Purchases
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    📋 Sales History
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    📊 Reports
+                </a>
+
+                <a href="#"
+                   class="nav-item">
+                    ⚙️ Settings
+                </a>
+
+                <a href="{{ url_for('logout') }}"
+                   class="nav-item logout-item">
+                    🚪 Logout
+                </a>
+
+            </nav>
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <header class="dashboard-header">
+
+                <div>
+
+                    <h1>Edit Product</h1>
+
+                    <p>
+                        Update your product information
+                    </p>
+
+                </div>
+
+
+                <div class="user-profile">
+
+                    <strong>
+                        {{ current_user.owner_name }}
+                    </strong>
+
+                    <span>
+                        {{ current_user.role }}
+                    </span>
+
+                </div>
+
+            </header>
+
+
+            <section class="dashboard-card product-form-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>Edit Product</h3>
+
+                        <p>
+                            Update the details for
+                            {{ product.name }}.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form method="POST"
+                      class="product-form">
+                    
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>
+                                Product Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="name"
+                                value="{{ product.name }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Category
+                            </label>
+
+                            <input
+                                type="text"
+                                name="category"
+                                value="{{ product.category or '' }}"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>
+                                Buying Price (KSh)
+                            </label>
+
+                            <input
+                                type="number"
+                                name="buying_price"
+                                step="0.01"
+                                min="0"
+                                value="{{ product.buying_price }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Selling Price (KSh)
+                            </label>
+
+                            <input
+                                type="number"
+                                name="selling_price"
+                                step="0.01"
+                                min="0"
+                                value="{{ product.selling_price }}"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>
+                                Quantity
+                            </label>
+
+                            <input
+                                type="number"
+                                name="quantity"
+                                min="0"
+                                value="{{ product.quantity }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Low Stock Alert Level
+                            </label>
+
+                            <input
+                                type="number"
+                                name="low_stock_level"
+                                min="0"
+                                value="{{ product.low_stock_level }}"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Supplier
+                        </label>
+
+                        <input
+                            type="text"
+                            name="supplier"
+                            value="{{ product.supplier or '' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <a href="{{ url_for('products') }}"
+                           class="secondary-button">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="primary-button">
+                            Update Product
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

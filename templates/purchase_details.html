@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Purchase Order
+{% endblock %}
+
+{% block content %}
+
+<!-- =========================================
+     PAGE BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+        Dashboard
+    </a>
+
+    <span>/</span>
+
+    <span>
+        Purchasing
+    </span>
+
+    <span>/</span>
+
+    <a href="{{ url_for('purchases') }}">
+        Purchase Orders
+    </a>
+
+    <span>/</span>
+
+    <strong>
+        #{{ purchase_order.order_number }}
+    </strong>
+
+</div>
+
+
+<!-- =========================================
+     PAGE HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Purchase Order #{{ purchase_order.order_number }}
+        </h1>
+
+        <p>
+            View purchase order details and ordered products.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('purchases') }}"
+        class="secondary-button"
+    >
+        ← Back to Purchase Orders
+    </a>
+
+</header>
+
+
+<!-- =========================================
+     RECEIVE STOCK ACTION
+========================================= -->
+
+<div class="purchase-receive-action">
+
+    {% if purchase_order.status != "Received" %}
+
+        <a
+            href="{{ url_for(
+                'receive_purchase',
+                purchase_id=purchase_order.id
+            ) }}"
+            class="primary-button"
+        >
+            {% if purchase_order.status == "Partially Received" %}
+                📥 Receive Remaining Stock
+            {% else %}
+                📥 Receive Stock
+            {% endif %}
+        </a>
+
+    {% else %}
+
+        <span class="received-status-button">
+            ✓ Fully Received
+        </span>
+
+    {% endif %}
+
+</div>
+
+
+<!-- =========================================
+     PURCHASE ORDER DETAILS
+========================================= -->
+
+<section class="dashboard-card purchase-details-card">
+
+    <div class="purchase-details-header">
+
+        <div>
+
+            <span class="detail-label">
+                Supplier
+            </span>
+
+            <h2>
+                {{ purchase_order.supplier.name }}
+            </h2>
+
+        </div>
+
+
+        <div class="purchase-detail-status">
+
+            {% if purchase_order.status == "Pending" %}
+
+            <span class="purchase-status pending">
+                Pending
+            </span>
+
+            {% elif purchase_order.status == "Received" %}
+
+            <span class="purchase-status received">
+                Received
+            </span>
+
+            {% elif purchase_order.status == "Partially Received" %}
+
+            <span class="purchase-status partial">
+                Partially Received
+            </span>
+
+            {% else %}
+
+            <span class="purchase-status">
+                {{ purchase_order.status }}
+            </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         PURCHASE INFORMATION
+    ====================================== -->
+
+    <div class="purchase-information-grid">
+
+        <div class="purchase-information-item">
+
+            <span>
+                Order Number
+            </span>
+
+            <strong>
+                #{{ purchase_order.order_number }}
+            </strong>
+
+        </div>
+
+
+        <div class="purchase-information-item">
+
+            <span>
+                Order Date
+            </span>
+
+            <strong>
+                {{ purchase_order.order_date.strftime('%d %b %Y') }}
+            </strong>
+
+        </div>
+
+
+        <div class="purchase-information-item">
+
+            <span>
+                Supplier Phone
+            </span>
+
+            <strong>
+                {{ purchase_order.supplier.phone or "Not provided" }}
+            </strong>
+
+        </div>
+
+
+        <div class="purchase-information-item">
+
+            <span>
+                Expected Total
+            </span>
+
+            <strong>
+                KSh {{ "%.2f"|format(
+                    purchase_order.expected_total or 0
+                ) }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         ORDERED PRODUCTS
+    ====================================== -->
+
+    <div class="purchase-products-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h3>
+                    Ordered Products
+                </h3>
+
+                <p>
+                    Products included in this purchase order.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="purchases-table-wrapper">
+
+            <table class="purchases-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Product
+                        </th>
+
+                        <th>
+                            Quantity Ordered
+                        </th>
+
+                        <th>
+                            Quantity Received
+                        </th>
+
+                        <th>
+                            Remaining
+                        </th>
+
+                        <th>
+                            Expected Buying Price
+                        </th>
+
+                        <th>
+                            Total
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in purchase_order.items %}
+
+                    {% set remaining =
+                        item.quantity_ordered -
+                        item.quantity_received
+                    %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+                                {{ item.product.name }}
+                            </strong>
+
+                        </td>
+
+                        <td>
+                            {{ item.quantity_ordered }}
+                        </td>
+
+                        <td>
+                            {{ item.quantity_received }}
+                        </td>
+
+                        <td>
+                            {{ remaining }}
+                        </td>
+
+                        <td>
+                            KSh {{ "%.2f"|format(
+                                item.buying_price
+                            ) }}
+                        </td>
+
+                        <td>
+                            KSh {{ "%.2f"|format(
+                                item.total_price
+                            ) }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         PURCHASE NOTES
+    ====================================== -->
+
+    {% if purchase_order.notes %}
+
+    <div class="purchase-notes">
+
+        <h3>
+            Notes
+        </h3>
+
+        <p>
+            {{ purchase_order.notes }}
+        </p>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =====================================
+         EXPECTED TOTAL
+    ====================================== -->
+
+    <div class="purchase-details-total">
+
+        <span>
+            Expected Order Total
+        </span>
+
+        <strong>
+            KSh {{ "%.2f"|format(
+                purchase_order.expected_total or 0
+            ) }}
+        </strong>
+
+    </div>
+
+</section>
+<!-- =========================================
+     DELIVERIES
+========================================= -->
+
+<section class="supplier-history-card">
+
+    <div class="supplier-history-header">
+
+        <div>
+            <h2>Deliveries</h2>
+
+            <p>
+                Stock deliveries received against this purchase order.
+            </p>
+        </div>
+
+    </div>
+
+
+    {% if deliveries %}
+
+    <div class="delivery-table-wrapper">
+
+        <table class="supplier-history-table delivery-table">
+
+            <thead>
+
+                <tr>
+                    <th>Delivery Number</th>
+                    <th>Invoice Number</th>
+                    <th>Delivery Date</th>
+                    <th>Invoice Date</th>
+                    <th>Invoice</th>
+                    <th>Product</th>
+                    <th>Quantity Received</th>
+                    <th>Actual Buying Price</th>
+                    <th>Total</th>
+                    <th>Notes</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for delivery in deliveries %}
+
+                    {% for item in delivery.items %}
+
+                    <tr>
+
+                        <!-- DELIVERY NUMBER -->
+
+                        <td>
+                            <strong>
+                                {{ delivery.delivery_number }}
+                            </strong>
+                        </td>
+
+
+                        <!-- INVOICE NUMBER -->
+
+                        <td>
+                            {{ delivery.invoice_number or "Not provided" }}
+                        </td>
+
+
+                        <!-- DELIVERY DATE -->
+
+                        <td>
+                            {{ delivery.delivery_date.strftime(
+                                '%d %b %Y'
+                            ) }}
+                        </td>
+
+                        <!-- Invoice date -->
+                         <td>
+                            {% if delivery.invoice_date %}
+                               {{ delivery.invoice_date.strftime('%d %b %Y') }}
+                            {% else %}
+                               Not provided
+                            {% endif %}
+                         </td>
+
+                        <!-- Invoice -->
+                        <td>
+                            {% if delivery.invoice_file %}
+                               <a
+                                 href="{{ url_for(
+                                     'static',
+                                     filename='uploads/invoices/' + delivery.invoice_file
+                                 ) }}"
+                                 target="_blank"
+                                 class="invoice-link"
+                               >
+                                  📎 View Invoice
+                               </a>
+                            {% else %}
+                                <span class="no-invoice">
+                                     No invoice
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- PRODUCT -->
+
+                        <td>
+                            <strong>
+                                {{ item.product.name }}
+                            </strong>
+                        </td>
+
+
+                        <!-- QUANTITY RECEIVED -->
+
+                        <td>
+                            {{ item.quantity_received }}
+                        </td>
+
+
+                        <!-- ACTUAL BUYING PRICE -->
+
+                        <td>
+                            <strong>
+                                KSh {{ "%.2f"|format(
+                                    item.buying_price
+                                ) }}
+                            </strong>
+                        </td>
+
+
+                        <!-- TOTAL -->
+
+                        <td>
+                            <strong>
+                                KSh {{ "%.2f"|format(
+                                    item.total_price
+                                ) }}
+                            </strong>
+                        </td>
+
+
+                        <!-- NOTES -->
+
+                        <td>
+                            {{ delivery.notes or "—" }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- TOTAL DELIVERED VALUE -->
+
+    <div class="deliveries-total-summary">
+
+        <span>
+            Total Delivered Value
+        </span>
+
+        <strong>
+
+            KSh {{ "%.2f"|format(
+                deliveries
+                |map(attribute='total_amount')
+                |sum
+            ) }}
+
+        </strong>
+
+    </div>
+
+
+    {% else %}
+
+    <div class="no-products-message">
+
+        <p>
+            No deliveries have been recorded for this purchase order yet.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</section>
+{% endblock %}

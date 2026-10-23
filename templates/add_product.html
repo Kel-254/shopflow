@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Add Product
+{% endblock %}
+
+{% block content %}
+
+<header class="dashboard-header">
+
+    <div>
+        <h1>Add Product</h1>
+
+        <p>
+            Add a new product to your inventory
+        </p>
+    </div>
+
+    <div class="user-profile">
+
+        <strong>
+            {{ current_user.owner_name }}
+        </strong>
+
+        <span>
+            {{ current_user.role }}
+        </span>
+
+    </div>
+
+</header>
+
+
+<section class="dashboard-card product-form-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h3>Product Information</h3>
+
+            <p>
+                Enter the details of the product below.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form method="POST"
+          action="{{ url_for('add_product') }}"
+          class="product-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>
+                    Product Name
+                </label>
+
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="e.g. Bread"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Category
+                </label>
+
+                <input
+                    type="text"
+                    name="category"
+                    placeholder="e.g. Bakery"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>
+                    Buying Price (KSh)
+                </label>
+
+                <input
+                    type="number"
+                    name="buying_price"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 50"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Selling Price (KSh)
+                </label>
+
+                <input
+                    type="number"
+                    name="selling_price"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 70"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>
+                    Quantity
+                </label>
+
+                <div class="number-input-wrapper">
+
+                    <button type="button"
+                            class="number-minus"
+                            onclick="changeNumber(this, -1)">
+                             -
+                    </button>
+                    <input
+                         type="number"
+                         name="quantity"
+                         min="0"
+                         placeholder="e.g. 20"
+                         required
+                    >
+                    <button type="button"
+                            class="number-plus"
+                            onclick="changeNumber(this, 1)">
+                             +
+                    </button>
+
+                </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Low Stock Alert Level
+                </label>
+
+                <div class="number-input-wrapper">
+
+                    <button type="button"
+                            class="number-minus"
+                            onclick="changeNumber(this, -1)">
+                             -
+                    </button>
+                    <input
+                         type="number"
+                         name="low_stock_level"
+                         min="0"
+                         value="{{ current_user.shop.default_low_stock_level }}"
+                         required
+                    >
+                    <button type="button"
+                            class="number-plus"
+                            onclick="changeNumber(this, 1)">
+                             +
+                    </button>
+
+                </div>
+
+            </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Supplier
+            </label>
+
+            <input
+                type="text"
+                name="supplier"
+                placeholder="e.g. Brookside Distributors"
+            >
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a href="{{ url_for('products') }}"
+               class="secondary-button">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    class="primary-button">
+                Save Product
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

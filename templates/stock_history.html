@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+
+
+
+{% block title %}
+
+Lena MiniMart | Stock History
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+<!-- =========================================
+     BREADCRUMB
+========================================= -->
+
+<div class="page-breadcrumb">
+
+    <a href="{{ url_for('dashboard') }}">
+
+        Dashboard
+
+    </a>
+
+    <span>
+
+        /
+
+    </span>
+
+    <span>
+
+        Inventory
+
+    </span>
+
+    <span>
+
+        /
+
+    </span>
+
+    <strong>
+
+        Stock History
+
+    </strong>
+
+</div>
+
+
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header class="dashboard-header">
+
+    <div>
+
+        <h1>
+
+            Stock History
+
+        </h1>
+
+        <p>
+
+            Track every increase and decrease in your inventory
+
+        </p>
+
+    </div>
+
+
+
+    <div class="user-profile">
+
+        <div class="user-avatar">
+
+            {{ current_user.owner_name[0] | upper }}
+
+        </div>
+
+
+
+        <div>
+
+            <strong>
+
+                {{ current_user.owner_name }}
+
+            </strong>
+
+            <span>
+
+                {{ current_user.role | capitalize }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================
+     STOCK HISTORY SUMMARY
+========================================= -->
+
+<section class="inventory-summary-section">
+
+    <div class="inventory-summary">
+
+
+
+        <!-- MOVEMENTS -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+
+                📋
+
+            </div>
+
+            <div class="inventory-stat-content">
+
+                <span class="inventory-stat-label">
+
+                    Movements
+
+                </span>
+
+                <strong class="inventory-stat-value">
+
+                    {{ total_movements }}
+
+                </strong>
+
+                <span class="inventory-stat-description">
+
+                    Total records
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- STOCK IN -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+
+                📥
+
+            </div>
+
+            <div class="inventory-stat-content">
+
+                <span class="inventory-stat-label">
+
+                    Stock In
+
+                </span>
+
+                <strong class="inventory-stat-value">
+
+                    +{{ total_stock_in }}
+
+                </strong>
+
+                <span class="inventory-stat-description">
+
+                    Units received
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- STOCK OUT -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+
+                📤
+
+            </div>
+
+            <div class="inventory-stat-content">
+
+                <span class="inventory-stat-label">
+
+                    Stock Out
+
+                </span>
+
+                <strong class="inventory-stat-value">
+
+                    -{{ total_stock_out }}
+
+                </strong>
+
+                <span class="inventory-stat-description">
+
+                    Units removed
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- CURRENT STOCK -->
+
+        <div class="inventory-stat">
+
+            <div class="inventory-stat-icon">
+
+                📦
+
+            </div>
+
+            <div class="inventory-stat-content">
+
+                <span class="inventory-stat-label">
+
+                    Current Stock
+
+                </span>
+
+                <strong class="inventory-stat-value">
+
+                    {{ total_current_stock }}
+
+                </strong>
+
+                <span class="inventory-stat-description">
+
+                    Units available
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================
+     STOCK HISTORY CARD
+========================================= -->
+
+<section
+
+    class="dashboard-card"
+
+    id="inventory-movements"
+
+>
+
+
+
+    <!-- CARD HEADER -->
+
+    <div class="card-header">
+
+        <div>
+
+            <h3>
+
+                Inventory Movements
+
+            </h3>
+
+            <p>
+
+                A complete record of stock coming in and going out.
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================
+         STOCK HISTORY FILTERS
+    ========================================= -->
+
+    <form
+
+        method="GET"
+
+        action="{{ url_for('stock_history') }}"
+
+        class="stock-history-filters"
+
+        id="stock-history-filter-form"
+
+    >
+
+        <!-- PRODUCT SEARCH -->
+
+        <div class="filter-group">
+
+            <label for="search">
+
+                Search Product
+
+            </label>
+
+            <input
+
+                type="text"
+
+                id="search"
+
+                name="search"
+
+                placeholder="Search product..."
+
+                value="{{ search }}"
+
+            >
+
+        </div>
+
+
+
+        <!-- MOVEMENT TYPE -->
+
+        <div class="filter-group">
+
+            <label for="movement_type">
+
+                Movement
+
+            </label>
+
+            <select
+
+                id="movement_type"
+
+                name="movement_type"
+
+            >
+
+                <option value="">
+
+                    All Movements
+
+                </option>
+
+
+
+                <option
+
+                    value="Stock In"
+
+                    {% if movement_type == "Stock In" %}
+
+                        selected
+
+                    {% endif %}
+
+                >
+
+                    Stock In
+
+                </option>
+
+
+
+                <option
+
+                    value="Stock Out"
+
+                    {% if movement_type == "Stock Out" %}
+
+                        selected
+
+                    {% endif %}
+
+                >
+
+                    Stock Out
+
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- DATE -->
+
+        <div class="filter-group">
+
+            <label for="date">
+
+                Date
+
+            </label>
+
+            <input
+
+                type="date"
+
+                id="date"
+
+                name="date"
+
+                value="{{ selected_date }}"
+
+            >
+
+        </div>
+
+
+
+        <!-- ACTIONS -->
+
+        <div class="filter-actions">
+
+            <button
+
+                type="submit"
+
+                class="primary-button"
+
+            >
+
+                🔎 Filter
+
+            </button>
+
+
+
+            <a
+
+                href="{{ url_for('stock_history') }}"
+
+                class="secondary-button"
+
+            >
+
+                Clear
+
+            </a>
+
+        </div>
+
+    </form>
+
+
+
+    <!-- =========================================
+         STOCK HISTORY TABLE
+    ========================================= -->
+
+    {% if movements %}
+
+
+
+    <div class="products-table-wrapper">
+
+        <table class="products-table">
+
+
+
+            <!-- TABLE HEADER -->
+
+            <thead>
+
+                <tr>
+
+                    <th>
+
+                        Date & Time
+
+                    </th>
+
+                    <th>
+
+                        Product
+
+                    </th>
+
+                    <th>
+
+                        Movement
+
+                    </th>
+
+                    <th>
+
+                        Previous Stock
+
+                    </th>
+
+                    <th>
+
+                        Qty Changed
+
+                    </th>
+
+                    <th>
+
+                        New Stock
+
+                    </th>
+
+                    <th>
+
+                        Reference
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+
+            <!-- TABLE BODY -->
+
+            <tbody>
+
+                {% for movement in movements %}
+
+                <tr>
+
+
+
+                   <!-- DATE -->
+                   <td>
+                       {{ format_eat_24(movement.created_at) }}
+                   </td>
+
+                    <!-- PRODUCT -->
+
+                    <td>
+
+                        <strong>
+
+                            {{ movement.product.name }}
+
+                        </strong>
+
+                    </td>
+
+
+
+                    <!-- MOVEMENT -->
+
+                    <td>
+
+                        {% if movement.movement_type == "Stock In" %}
+
+                            <span class="stock-status in-stock">
+
+                                🟢 Stock In
+
+                            </span>
+
+                        {% elif movement.movement_type == "Stock Out" %}
+
+                            <span class="stock-status low-stock">
+
+                                🔴 Stock Out
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="stock-status">
+
+                                {{ movement.movement_type }}
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- PREVIOUS STOCK -->
+
+                    <td>
+
+                        {{ movement.previous_quantity }}
+
+                    </td>
+
+
+
+                    <!-- QUANTITY CHANGED -->
+
+                    <td>
+
+                        {% if movement.movement_type == "Stock In" %}
+
+                            <strong class="quantity-in">
+
+                                +{{ movement.quantity }}
+
+                            </strong>
+
+                        {% elif movement.movement_type == "Stock Out" %}
+
+                            <strong class="quantity-out">
+
+                                -{{ movement.quantity }}
+
+                            </strong>
+
+                        {% else %}
+
+                            {{ movement.quantity }}
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- NEW STOCK -->
+
+                    <td>
+
+                        <strong>
+
+                            {{ movement.new_quantity }}
+
+                        </strong>
+
+                    </td>
+
+
+
+                    <!-- REFERENCE -->
+
+                    <!-- REFERENCE -->
+
+                    <td>
+
+                        {% set delivery = delivery_references.get(movement.id) %}
+
+                        {% if delivery and delivery.purchase_order_id %}
+
+                           <a
+                             href="{{ url_for(
+                                  'delivery_details',
+                                   delivery_id=delivery.id
+                             ) }}"
+                             class="stock-reference-link"
+                            >
+                             📦 {{ delivery.delivery_number }}
+                            </a>
+                       
+                        {% elif movement.reference_type %}
+
+                            {{ movement.reference_type }}
+                  
+                            {% if movement.reference_id %}
+                                #{{ movement.reference_id }}
+                            {% endif %}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </td>
+
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+
+    {% else %}
+
+
+
+    <!-- =========================================
+         NO MOVEMENTS / NO SEARCH RESULTS
+    ========================================= -->
+
+    <div class="no-products-message">
+
+        <div class="no-products-icon">
+
+            🔎
+
+        </div>
+
+
+
+        {% if search or movement_type or selected_date %}
+
+            <h3>
+
+                No Matching Movements
+
+            </h3>
+
+
+
+            <p>
+
+                No stock movements match your current filters.
+
+                Try changing your search or clearing the filters.
+
+            </p>
+
+
+
+            <a
+
+                href="{{ url_for('stock_history') }}"
+
+                class="secondary-button"
+
+            >
+
+                Clear Filters
+
+            </a>
+
+        {% else %}
+
+            <h3>
+
+                No Stock Movements Yet
+
+            </h3>
+
+
+
+            <p>
+
+                Stock movements will appear here when inventory is received or sold.
+
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+
+    {% endif %}
+
+
+
+</section>
+
+
+
+<!-- =========================================
+     RETURN TO MOVEMENTS AFTER FILTERING
+========================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (window.location.search) {
+
+            const movementsSection =
+                document.getElementById("inventory-movements");
+
+            if (movementsSection) {
+
+                setTimeout(function () {
+
+                    movementsSection.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+
+                }, 100);
+
+            }
+
+        }
+
+    });
+
+</script>
+
+
+
+{% endblock %}

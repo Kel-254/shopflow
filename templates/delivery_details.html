@@ -1,0 +1,214 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Lena MiniMart | Delivery Details
+{% endblock %}
+
+{% block content %}
+
+<div class="delivery-details-page">
+
+<div class="page-breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <span>/</span>
+    <a href="{{ url_for('deliveries') }}">Deliveries</a>
+    <span>/</span>
+    <strong>{{ delivery.delivery_number }}</strong>
+</div>
+
+
+<div class="delivery-actions">
+    <a href="{{ url_for('stock_history', delivery_id=delivery.id) }}"
+       class="secondary-button">
+        📊 View Stock History
+    </a>
+</div>
+
+<header class="dashboard-header">
+    <div>
+        <h1>Delivery Details</h1>
+        <p>Review the products, quantities, and invoice for this delivery.</p>
+    </div>
+
+    <div class="user-profile">
+        <div class="user-avatar">
+            {{ current_user.owner_name[0] | upper }}
+        </div>
+        <div>
+            <strong>{{ current_user.owner_name }}</strong>
+            <span>{{ current_user.role | capitalize }}</span>
+        </div>
+    </div>
+</header>
+
+<section class="dashboard-card">
+
+    <div class="card-header">
+        <div>
+            <h3>{{ delivery.delivery_number }}</h3>
+            <p>Delivery recorded on
+                {{ delivery.delivery_date.strftime('%d %b %Y') if delivery.delivery_date else '—' }}
+            </p>
+        </div>
+    </div>
+
+    <div class="inventory-summary">
+
+        <div class="inventory-stat">
+            <div class="inventory-stat-content">
+                <span class="inventory-stat-label">Supplier</span>
+                <strong class="inventory-stat-value">
+                    {{ delivery.supplier.name }}
+                </strong>
+            </div>
+        </div>
+
+        <!-- DELIVERY DATE -->
+        <div class="inventory-stat">
+            <div class="inventory-stat-content">
+                <span class="inventory-stat-label">Delivery Date</span>
+                <strong class="inventory-stat-value">
+                    {{ delivery.delivery_date.strftime('%d %b %Y') if delivery.delivery_date else '—' }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="inventory-stat">
+            <div class="inventory-stat-content">
+                <span class="inventory-stat-label">Invoice Number</span>
+                <strong class="inventory-stat-value">
+                    {{ delivery.invoice_number or 'Not provided' }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="inventory-stat">
+            <div class="inventory-stat-content">
+                <span class="inventory-stat-label">Delivery Value</span>
+                <strong class="inventory-stat-value">
+                    KSh {{ '%.2f'|format(delivery.total_amount or 0) }}
+                </strong>
+            </div>
+        </div>
+
+        <!-- PURCHASE ORDER -->
+        <div class="inventory-stat">
+            <div class="inventory-stat-content">
+                <span class="inventory-stat-label">Purchase Order</span>
+
+                {% if delivery.purchase_order_id %}
+                    <a
+                       href="{{ url_for('purchase_details', purchase_id=delivery.purchase_order_id) }}"
+                       class="stock-reference-link"
+                    >
+                       📋 View Purchase Order #{{ delivery.purchase_order_id }}
+                    </a>
+                {% else %}
+                    <strong class="inventory-stat-value">
+                        No linked order
+                    </strong>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section class="dashboard-card">
+
+    <div class="card-header">
+        <div>
+            <h3>Received Products</h3>
+            <p>Actual quantities and buying prices for this delivery.</p>
+        </div>
+    </div>
+
+    <div class="products-table-wrapper">
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity Received</th>
+                    <th>Actual Buying Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in delivery.items %}
+                <tr>
+                    <td><strong>{{ item.product.name }}</strong></td>
+                    <td>{{ item.quantity_received }}</td>
+                    <td>KSh {{ '%.2f'|format(item.buying_price) }}</td>
+                    <td><strong>KSh {{ '%.2f'|format(item.total_price) }}</strong></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">No products recorded for this delivery.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+<section class="dashboard-card">
+
+    <div class="card-header">
+        <div>
+            <h3>Invoice & Notes</h3>
+            <p>Supporting delivery information.</p>
+        </div>
+    </div>
+
+    <p>
+        <strong>Invoice Date:</strong>
+        {% if delivery.invoice_date %}
+            {{ delivery.invoice_date.strftime('%d %b %Y') }}
+        {% else %}
+            Not provided
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Notes:</strong>
+        {{ delivery.notes or 'No notes recorded.' }}
+    </p>
+
+    <p>
+        <strong>Invoice File:</strong>
+        {% if delivery.invoice_file %}
+            <a
+                href="{{ url_for('static', filename='uploads/invoices/' + delivery.invoice_file) }}"
+                class="stock-reference-link"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                📎 View Invoice
+            </a>
+        {% else %}
+            No invoice file uploaded.
+        {% endif %}
+    </p>
+
+</section>
+
+<div class="page-actions">
+    {% if delivery.purchase_order_id %}
+        <a
+            href="{{ url_for('purchase_details', purchase_id=delivery.purchase_order_id) }}"
+            class="secondary-button"
+        >
+            ← Back to Purchase Order
+        </a>
+    {% else %}
+        <a href="{{ url_for('purchases') }}" class="secondary-button">
+            ← Back to Purchase Orders
+        </a>
+    {% endif %}
+</div>
+</div>
+
+{% endblock %}
