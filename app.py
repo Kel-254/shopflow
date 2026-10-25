@@ -778,7 +778,7 @@ def load_user(user_id):
 
 @app.route("/")
 def home():
-    return "Lena MiniMart System is running!"
+    return redirect(url_for("register_shop"))
 
 # Registration #
 
@@ -3027,7 +3027,7 @@ with app.app_context():
             )
             print("Added new_quantity to stock_movement.")
 
-    
+
 # -------------------------
 # Run Application
 # -------------------------
