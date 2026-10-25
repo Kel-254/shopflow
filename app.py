@@ -2865,114 +2865,126 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
+
 # -------------------------
-# Create Database
+# Create Database and Apply Safe Schema Updates
 # -------------------------
 
 with app.app_context():
+    from sqlalchemy import inspect, text
+
+    # Create any missing tables from the current models.
     db.create_all()
 
-    from sqlalchemy import inspect, text
-
     inspector = inspect(db.engine)
-    columns = [
+
+    # Add the default low-stock setting when missing.
+    shop_columns = {
         column["name"]
         for column in inspector.get_columns("shop")
-    ]
+    }
 
-    if "default_low_stock_level" not in columns:
+    if "default_low_stock_level" not in shop_columns:
         with db.engine.begin() as connection:
-            connection.execute(text(
-                "ALTER TABLE shop "
-                "ADD COLUMN default_low_stock_level "
-                "INTEGER NOT NULL DEFAULT 5"
-            ))
-
+            connection.execute(
+                text(
+                    "ALTER TABLE shop "
+                    "ADD COLUMN default_low_stock_level "
+                    "INTEGER NOT NULL DEFAULT 5"
+                )
+            )
         print("Added default low-stock setting to the database.")
 
-    
-    # Add payment method to existing sales table if missing
+    # Add missing sales payment fields.
     inspector = inspect(db.engine)
-    sale_columns = [
+    sale_columns = {
         column["name"]
         for column in inspector.get_columns("sale")
-    ]
-
-    if "payment_method" not in sale_columns:
-        with db.engine.begin() as connection:
-            connection.execute(text(
-                "ALTER TABLE sale "
-                "ADD COLUMN payment_method "
-                "VARCHAR(20) NOT NULL DEFAULT 'Cash'"
-            ))
-
-        print("Added payment method to the sales table.")
-
-
-    
-    # Add payment tracking fields to existing sales table
-    inspector = inspect(db.engine)
-    sale_columns = [
-        column["name"]
-        for column in inspector.get_columns("sale")
-    ]
+    }
 
     with db.engine.begin() as connection:
+        if "payment_method" not in sale_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE sale "
+                    "ADD COLUMN payment_method "
+                    "VARCHAR(20) NOT NULL DEFAULT 'Cash'"
+                )
+            )
+            print("Added payment_method to the sales table.")
+
         if "payment_status" not in sale_columns:
-            connection.execute(text(
-                "ALTER TABLE sale "
-                "ADD COLUMN payment_status "
-                "VARCHAR(20) NOT NULL DEFAULT 'Paid'"
-            ))
+            connection.execute(
+                text(
+                    "ALTER TABLE sale "
+                    "ADD COLUMN payment_status "
+                    "VARCHAR(20) NOT NULL DEFAULT 'Paid'"
+                )
+            )
 
         if "amount_paid" not in sale_columns:
-            connection.execute(text(
-                "ALTER TABLE sale "
-                "ADD COLUMN amount_paid "
-                "FLOAT NOT NULL DEFAULT 0.0"
-            ))
+            connection.execute(
+                text(
+                    "ALTER TABLE sale "
+                    "ADD COLUMN amount_paid "
+                    "FLOAT NOT NULL DEFAULT 0.0"
+                )
+            )
 
         if "payment_reference" not in sale_columns:
-            connection.execute(text(
-                "ALTER TABLE sale "
-                "ADD COLUMN payment_reference VARCHAR(100)"
-            ))
+            connection.execute(
+                text(
+                    "ALTER TABLE sale "
+                    "ADD COLUMN payment_reference VARCHAR(100)"
+                )
+            )
 
-        # Preserve old cash sales as paid.
-        connection.execute(text(
-            "UPDATE sale "
-            "SET amount_paid = total_amount "
-            "WHERE payment_method = 'Cash' "
-            "AND amount_paid = 0"
-        ))
+    # Refresh the sales columns after adding any missing fields.
+    inspector = inspect(db.engine)
+    sale_columns = {
+        column["name"]
+        for column in inspector.get_columns("sale")
+    }
 
-        # Don't treat old electronic-payment records as verified
-        # merely because a cashier selected a payment method.
-        connection.execute(text(
-            "UPDATE sale "
-            "SET payment_status = 'Pending', amount_paid = 0 "
-            "WHERE payment_method IN ('M-Pesa', 'Bank') "
-            "AND amount_paid = 0"
-        ))
+    # Preserve older cash sales as paid.
+    with db.engine.begin() as connection:
+        if {"payment_method", "amount_paid", "total_amount"}.issubset(sale_columns):
+            connection.execute(
+                text(
+                    "UPDATE sale "
+                    "SET amount_paid = total_amount "
+                    "WHERE payment_method = 'Cash' "
+                    "AND amount_paid = 0"
+                )
+            )
 
+        # Keep unverified electronic payments pending.
+        if {"payment_method", "payment_status", "amount_paid"}.issubset(sale_columns):
+            connection.execute(
+                text(
+                    "UPDATE sale "
+                    "SET payment_status = 'Pending', amount_paid = 0 "
+                    "WHERE payment_method IN ('M-Pesa', 'Bank') "
+                    "AND amount_paid = 0"
+                )
+            )
 
-    # Add payment settings to existing shop table
-    from sqlalchemy import inspect, text
-
+    # Add missing shop payment settings.
     inspector = inspect(db.engine)
     shop_columns = {
         column["name"]
         for column in inspector.get_columns("shop")
     }
 
+    # Use SQL defaults accepted by both SQLite and PostgreSQL.
     payment_columns = {
         "bank_name": "VARCHAR(100)",
         "bank_account_name": "VARCHAR(150)",
         "bank_account_number": "VARCHAR(100)",
         "bank_branch": "VARCHAR(100)",
         "bank_payment_instructions": "TEXT",
-        "accept_bank_transfer": "BOOLEAN NOT NULL DEFAULT 0",
-        "accept_mpesa": "BOOLEAN NOT NULL DEFAULT 1",
+        "accept_bank_transfer": "BOOLEAN NOT NULL DEFAULT FALSE",
+        "accept_mpesa": "BOOLEAN NOT NULL DEFAULT TRUE",
     }
 
     with db.engine.begin() as connection:
@@ -2985,6 +2997,35 @@ with app.app_context():
                     )
                 )
                 print(f"Added {column_name} to the shop table.")
+
+    # Add stock movement quantity fields during application startup,
+    # including when the application runs under Gunicorn on Render.
+    inspector = inspect(db.engine)
+    stock_movement_columns = {
+        column["name"]
+        for column in inspector.get_columns("stock_movement")
+    }
+
+    with db.engine.begin() as connection:
+        if "previous_quantity" not in stock_movement_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE stock_movement "
+                    "ADD COLUMN previous_quantity "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
+            )
+            print("Added previous_quantity to stock_movement.")
+
+        if "new_quantity" not in stock_movement_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE stock_movement "
+                    "ADD COLUMN new_quantity "
+                    "INTEGER NOT NULL DEFAULT 0"
+                )
+            )
+            print("Added new_quantity to stock_movement.")
 
     
 # -------------------------
