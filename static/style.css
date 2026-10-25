@@ -277,32 +277,28 @@ a {
     color: #9a9a91;
 }
 
-
 /* =========================================================
    8. AUTH BUTTONS
 ========================================================= */
 
-.register-card button,
-.login-card button {
+/* Main submit buttons only */
+.register-card button[type="submit"],
+.login-card button[type="submit"] {
     width: 100%;
-
     padding: 15px;
-
     border: none;
-
     border-radius: 15px;
 
-    background:
-        linear-gradient(
-            145deg,
-            var(--emerald-light),
-            var(--emerald-dark)
-        );
+    background: linear-gradient(
+        145deg,
+        var(--emerald-light),
+        var(--emerald-dark)
+    );
 
     color: var(--white);
-
     font-size: 16px;
     font-weight: 700;
+    cursor: pointer;
 
     box-shadow:
         7px 7px 15px rgba(4, 92, 66, 0.25),
@@ -311,8 +307,8 @@ a {
     transition: all 0.3s ease;
 }
 
-.register-card button:hover,
-.login-card button:hover {
+.register-card button[type="submit"]:hover,
+.login-card button[type="submit"]:hover {
     transform: translateY(-3px);
 
     box-shadow:
@@ -320,11 +316,52 @@ a {
         -5px -5px 12px rgba(255, 255, 255, 0.9);
 }
 
-.register-card button:active,
-.login-card button:active {
+.register-card button[type="submit"]:active,
+.login-card button[type="submit"]:active {
     transform: translateY(1px);
 }
 
+/* Password eye icon — not a submit button */
+.register-card .password-wrapper .toggle-password,
+.login-card .password-wrapper .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    left: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+
+    background: transparent;
+    color: var(--emerald-dark);
+
+    border: none;
+    border-radius: 50%;
+    box-shadow: none;
+
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+
+    transform: translateY(-50%);
+    transition: none;
+    z-index: 2;
+}
+
+.register-card .password-wrapper .toggle-password:hover,
+.login-card .password-wrapper .toggle-password:hover,
+.register-card .password-wrapper .toggle-password:active,
+.login-card .password-wrapper .toggle-password:active {
+    background: transparent;
+    box-shadow: none;
+    transform: translateY(-50%);
+}
 
 /* =========================================================
    9. LOGIN LINK
@@ -10138,6 +10175,65 @@ body.payment-modal-open {
     background: #d1e7dd;
     border: 1px solid #badbcc;
 }
+/* =========================================================
+   PASSWORD FIELD — LOGIN AND REGISTRATION
+========================================================= */
 
+.password-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
 
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 48px;
+}
 
+/* Eye icon positioned inside the password input */
+.register-card .password-wrapper button.toggle-password,
+.login-card .password-wrapper button.toggle-password {
+    position: absolute !important;
+    top: 50% !important;
+    right: 12px !important;
+    left: auto !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: transparent !important;
+    color: #047857 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    font-size: 18px !important;
+    line-height: 1 !important;
+    cursor: pointer;
+    transform: translateY(-50%) !important;
+    transition: none !important;
+    z-index: 5;
+}
+
+.register-card .password-wrapper button.toggle-password:hover,
+.register-card .password-wrapper button.toggle-password:focus,
+.register-card .password-wrapper button.toggle-password:active,
+.login-card .password-wrapper button.toggle-password:hover,
+.login-card .password-wrapper button.toggle-password:focus,
+.login-card .password-wrapper button.toggle-password:active {
+    background: transparent !important;
+    color: #047857 !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: translateY(-50%) !important;
+}
