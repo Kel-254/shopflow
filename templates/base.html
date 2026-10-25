@@ -40,7 +40,9 @@
         <div class="sidebar-brand">
 
             <div class="brand-icon">
-                LM
+                {% set shop_name = current_user.shop.name if current_user.is_authenticated and current_user.shop else 'Lena MiniMart' %}
+                {% set words = shop_name.split() %}
+                {{ (words[0][0] ~ (words[1][0] if words|length > 1 else ''))|upper }}
             </div>
 
             <div class="sidebar-brand-text">
